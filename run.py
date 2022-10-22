@@ -30,16 +30,24 @@ subprocess_capture_out = {
 }
 
 
-def args():
+def _parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--btype', default="dev", help="prod, dev, any")
     parser.add_argument('actions', metavar='A', type=str, default=[
                         "build", "run"], nargs='?', help='action')
-    return parser.parse_args()
+    return parser
+
+
+def args():
+    return _parser().parse_args()
 
 
 def extract_static():
     pass
+
+
+def _is_dev(a):
+    return "dev" in a.btype
 
 
 def _running_instances():
@@ -52,15 +60,17 @@ def _running_instances():
 
 
 def kill():
+    """ Kills all the running container instances """
     ps = _running_instances()
     _cmd = ["docker", "kill"]
     for p in ps:
-        c = _cmd + [p["ID"]]
-        print(' '.join(c))
-        subprocess.run(c)
+        _c = _cmd + [p["ID"]]
+        print(' '.join(_c))
+        subprocess.run(_c)
 
 
 def shell(dev=True):
+    """ Run a shell on a running container instance """
     ps = [x for x in _running_instances() if (
         "dev" if dev else "prod") in x["Image"]]
     assert len(ps) > 0, "no running instances found"
@@ -86,6 +96,8 @@ def redis(dev):
     """
     assert dev, "Local redis is only for development"
     _cmd = [*c.drun, *c.redis_port, "-d", "redis:5"]
+    print(' '.join(_cmd))
+    subprocess.run(_cmd)
 
 
 def run(dev=True):
@@ -107,6 +119,62 @@ def run(dev=True):
     p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
 
 
+ACTIONS = {
+    "redis": {
+        "alias": ["rds", "rd", "redis-server"],
+        "continue": True,
+        "func": redis,
+        "exec": lambda a: redis(_is_dev(a))
+    },
+    "kill": {
+        "alias": ["k"],
+        "func": kill,
+        "exec": lambda a: kill()
+    },
+    "shell": {
+        "alias": ["s", "sh", "$"],
+        "func": shell,
+        "exec": lambda a: shell(_is_dev(a))
+    },
+    "run": {
+        "alias": ["r"],
+        "func": run,
+        "exec": lambda a: run(_is_dev(a))
+    },
+    "build": {
+        "alias": ["b"],
+        "continue": True,
+        "func": build,
+        "exec": lambda a: build(_is_dev(a))
+    },
+    "help": {
+        "alias": ["h", "?"],
+        "continue": False,
+        "exec": lambda a: _print_help(a)
+    }
+}
+
+
+def _print_help(a):
+    _parser().print_help()
+    print("Generating action help messages...")
+    for act in ACTIONS:
+        print(f"action '{act}' ")
+        f = ACTIONS[act].get("func", None)
+        if f:
+            info = ACTIONS[act]['func'].__doc__
+            print(f"\tinfo: {info}\n")
+    pass
+
+
+def _action_by_alias(alias):
+    for act in ACTIONS:
+        if alias in [*ACTIONS[act]["alias"], act]:
+            return act, ACTIONS[act]
+    else:
+        raise Exception(f"Action or alias '{alias}' not found")
+
+
 def main():
     """
     Entrypoint for `run.py` 
@@ -120,18 +188,14 @@ def main():
         Login to `c.shell` on a *running* container
     """
     a = args()
-    if "redis" in a.actions:
-        redis(a.btype)
-    if "kill" in a.actions:
-        kill()
-        return
-    if "shell" in a.actions:
-        shell("dev" in a.btype)
-        return
-    if "build" in a.actions:
-        build("dev" in a.btype)
-    if "run" in a.actions:
-        run("dev" in a.btype)
+    for action in a.actions:
+        k, _action = _action_by_alias(action)
+        print(f"Performing '{k}' -action")
+        _action["exec"](a)
+        if not _action.get("continue", False):
+            print(f"Ran into final action '{action}'")
+            break
+    print("Exiting `run.py`...")
 
 
 if __name__ == "__main__":
