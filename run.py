@@ -33,6 +33,8 @@ subprocess_capture_out = {
 def _parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--btype', default="dev", help="prod, dev, any")
+    parser.add_argument(
+        '-o', '--output', help="Ouput file or path required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
                         "build", "run"], nargs='?', help='action')
     return parser
@@ -69,13 +71,29 @@ def kill():
         subprocess.run(_c)
 
 
-def shell(dev=True):
-    """ Run a shell on a running container instance """
+def _run_in_running(dev, commands):
     ps = [x for x in _running_instances() if (
         "dev" if dev else "prod") in x["Image"]]
     assert len(ps) > 0, "no running instances found"
-    _cmd = ["docker", "exec", "-it", ps[0]["ID"], c.shell]
+    _cmd = ["docker", "exec", "-it", ps[0]["ID"], *commands]
     subprocess.run(" ".join(_cmd), shell=True)
+
+
+def shell(dev=True):
+    """ Run a shell on a running container instance """
+    _run_in_running(dev, [c.shell])
+
+
+def dumpdata(args):
+    """ Creates a full database fixture """
+    assert _is_dev(args), "Dumping data only allowed in dev"
+    output = []
+    if not args.output:
+        print("No '-o' output specified, dumping to stdout")
+    else:
+        output = ["--output", args.output]
+    _run_in_running(_is_dev(args), ["python3", "manage.py",
+                    "dumpdata", *(["--indent", "2"] if not args.output else []), *output])
 
 
 def build(dev=True):
@@ -151,6 +169,12 @@ ACTIONS = {
         "alias": ["h", "?"],
         "continue": False,
         "exec": lambda a: _print_help(a)
+    },
+    "dumpdata": {
+        "alias": ["dump", "backup"],
+        "continue": False,
+        "func": dumpdata,
+        "exec": lambda a: dumpdata(a)
     }
 }
 
@@ -181,11 +205,11 @@ def _action_by_alias(alias):
 def main():
     """
     Entrypoint for `run.py` 
-    Using the script requires *only* docker!
+    Using the script requires *only* docker and python!
     e.g:
     `./run.py ?`:
         Show basic doc/ help message
-    `./run.py`: ( use without local python install via `docker run -it --rm --name runpy -v "$PWD":/rapp -w /rapp python:3 python run.py` )
+    `./run.py`:
         Default; Build, then run development container
     `./run.py build run redis`:
         Also start redis server for local dev
@@ -193,7 +217,7 @@ def main():
         Login to `c.shell` on a *running* container
     """
     a = args()
-    for action in a.actions:
+    for action in a.actions if isinstance(a.actions, list) else [a.actions]:
         k, _action = _action_by_alias(action)
         print(f"Performing '{k}' -action")
         _action["exec"](a)
