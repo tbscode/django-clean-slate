@@ -14,8 +14,8 @@ class c:
     dbuild = ["docker", "build"]
     drun = ["docker", "run"]
     file = ["-f", "Dockerfile.dev"]
-    dtag = ["-t", f"{TAG}.dev"]
-    ptag = ["-t", f"{TAG}.prod"]
+    dtag = f"{TAG}.dev"
+    ptag = f"{TAG}.prod"
     port = ["-p", f"{PORT}:8000"]
     vmount = ["-v", f"{os.getcwd()}/back:/app"]
     denv = ["--env-file", "./env"]
@@ -38,7 +38,7 @@ def _parser():
     parser.add_argument(
         '-i', '--input', help="Input file required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
-                        "build", "run"], nargs='?', help='action')
+                        "build", "migrate", "run"], nargs='?', help='action')
     return parser
 
 
@@ -106,6 +106,16 @@ def loaddata(args):
                     "dumpdata", "-i", args.input])
 
 
+def migrate(args):
+    """ Migrate db inside docker container """
+    run(_is_dev(args), background=True)
+    _run_in_running(_is_dev(args), ["python3", "manage.py",
+                    "makemigrations"])
+    _run_in_running(_is_dev(args), ["python3", "manage.py",
+                    "migrate"])
+    kill()
+
+
 def build(dev=True):
     """
     Builds the docker container 
@@ -113,7 +123,7 @@ def build(dev=True):
     """
     if not dev:
         raise NotImplementedError
-    _cmd = [*c.dbuild, *c.file, *(c.dtag if dev else c.ptag), "."]
+    _cmd = [*c.dbuild, *c.file, "-t", c.dtag if dev else c.ptag, "."]
     print(" ".join(_cmd))
     subprocess.run(_cmd)
 
@@ -128,7 +138,7 @@ def redis(dev):
     subprocess.run(_cmd)
 
 
-def run(dev=True):
+def run(dev=True, background=False):
     """
     Running the docker image, this requires a build image to be present.
     Rebuild the image when ever you cange packages.
@@ -137,14 +147,17 @@ def run(dev=True):
         and forward port `c.port` (default 8000)
     """
     _cmd = [*c.drun, *(c.denv if dev else c.penv), *c.vmount,
-            *c.port, *(c.dtag if dev else c.ptag)]
+            *c.port, "-d" if background else "-t", c.dtag if dev else c.ptag]
     print(" ".join(_cmd))
 
-    def handler(signum, frame):
-        print("EXITING\nKilling container...")
-        kill()
-    signal.signal(signal.SIGINT, handler)
-    p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
+    if background:
+        subprocess.run(_cmd)
+    else:
+        def handler(signum, frame):
+            print("EXITING\nKilling container...")
+            kill()
+        signal.signal(signal.SIGINT, handler)
+        p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
 
 
 ACTIONS = {
@@ -179,6 +192,12 @@ ACTIONS = {
         "alias": ["h", "?"],
         "continue": False,
         "exec": lambda a: _print_help(a)
+    },
+    "migrate": {
+        "alias": ["m"],
+        "continue": True,
+        "func": migrate,
+        "exec": lambda a: migrate(a)
     },
     "dumpdata": {
         "alias": ["dump", "backup"],
