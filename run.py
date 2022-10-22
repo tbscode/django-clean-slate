@@ -156,15 +156,18 @@ ACTIONS = {
 
 
 def _print_help(a):
+    print(main.__doc__)
     _parser().print_help()
     print("Generating action help messages...")
     for act in ACTIONS:
-        print(f"action '{act}' ")
+        print(
+            f"action '{act}' (with aliases {', '.join(ACTIONS[act]['alias'])})")
         f = ACTIONS[act].get("func", None)
         if f:
             info = ACTIONS[act]['func'].__doc__
             print(f"\tinfo: {info}\n")
-    pass
+        else:
+            print("\tNo info availabol")
 
 
 def _action_by_alias(alias):
@@ -180,6 +183,8 @@ def main():
     Entrypoint for `run.py` 
     Using the script requires *only* docker!
     e.g:
+    `./run.py ?`:
+        Show basic doc/ help message
     `./run.py`: ( use without local python install via `docker run -it --rm --name runpy -v "$PWD":/rapp -w /rapp python:3 python run.py` )
         Default; Build, then run development container
     `./run.py build run redis`:
@@ -193,7 +198,7 @@ def main():
         print(f"Performing '{k}' -action")
         _action["exec"](a)
         if not _action.get("continue", False):
-            print(f"Ran into final action '{action}'")
+            print(f"Ran into final action '{k}'")
             break
     print("Exiting `run.py`...")
 
