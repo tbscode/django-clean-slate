@@ -1,9 +1,13 @@
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = '0i*%m&-$!be0%2_8_g$7o!$#(2nw)p51l^$$j38!q&t9)h!-$t'
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+SECRET_KEY = os.environ['DJ_SECRET_KEY']
+DEBUG = os.environ["DJ_DEBUG"].lower() in ('true', '1', 't')
+ALLOWED_HOSTS = os.environ.get("DJ_ALLOWED_HOSTS", "").split(",")
+if DEBUG:
+    info = '\n '.join([f'{n}: {globals()[n]}' for n in [
+        'BASE_DIR', 'SECRET_KEY', 'ALLOWED_HOSTS']])
+    print(f"configured django settings:\n {info}")
 
 INSTALLED_APPS = [
     'daphne',
