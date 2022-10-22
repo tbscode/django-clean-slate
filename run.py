@@ -35,6 +35,8 @@ def _parser():
     parser.add_argument('-b', '--btype', default="dev", help="prod, dev, any")
     parser.add_argument(
         '-o', '--output', help="Ouput file or path required by some actions")
+    parser.add_argument(
+        '-i', '--input', help="Input file required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
                         "build", "run"], nargs='?', help='action')
     return parser
@@ -94,6 +96,14 @@ def dumpdata(args):
         output = ["--output", args.output]
     _run_in_running(_is_dev(args), ["python3", "manage.py",
                     "dumpdata", *(["--indent", "2"] if not args.output else []), *output])
+
+
+def loaddata(args):
+    """ Load data from fixture """
+    assert _is_dev(args), "Loading fixture data is only allowed in dev"
+    assert args.input, "Please provide '-i' input file"
+    _run_in_running(_is_dev(args), ["python3", "manage.py",
+                    "dumpdata", "-i", args.input])
 
 
 def build(dev=True):
@@ -175,6 +185,12 @@ ACTIONS = {
         "continue": False,
         "func": dumpdata,
         "exec": lambda a: dumpdata(a)
+    },
+    "loaddata": {
+        "alias": ["load", "db_init"],
+        "continue": False,
+        "func": loaddata,
+        "exec": lambda a: loaddata(a)
     }
 }
 

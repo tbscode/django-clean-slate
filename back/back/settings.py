@@ -53,7 +53,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 """
 Development database is simply sq-lite, 
 it is not recommendet to store this database, rather you should load a fixture
-via: TODO @tbscode
+via:
 `./run.py dump` uses `manage.py dumpdata`
 """
 DATABASES = {
