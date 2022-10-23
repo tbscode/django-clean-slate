@@ -110,7 +110,7 @@ def shell(args):
     _run_in_running(_is_dev(args), [c.shell])
 
 
-@ register_action(alias=["dump", "backup"])
+@register_action(alias=["dump", "backup"])
 def dumpdata(args):
     """ Creates a full database fixture """
     assert _is_dev(args), "Dumping data only allowed in dev"
@@ -123,7 +123,7 @@ def dumpdata(args):
                     "dumpdata", *(["--indent", "2"] if not args.output else []), *output])
 
 
-@ register_action(alias=["load", "db_init"])
+@register_action(alias=["load", "db_init"])
 def loaddata(args):
     """ Load data from fixture """
     assert _is_dev(args), "Loading fixture data is only allowed in dev"
@@ -132,7 +132,7 @@ def loaddata(args):
                     "dumpdata", "-i", args.input])
 
 
-@ register_action(alias=["m"], cont=True)
+@register_action(alias=["m"], cont=True)
 def migrate(args):
     """ Migrate db inside docker container """
     run(_is_dev(args), background=True)
@@ -143,7 +143,7 @@ def migrate(args):
     kill()
 
 
-@ register_action(alias=["b"], cont=True)
+@register_action(alias=["b"], cont=True)
 def build(args):
     """
     Builds the docker container
@@ -156,7 +156,7 @@ def build(args):
     subprocess.run(_cmd)
 
 
-@ register_action(alias=["rds", "rd", "redis-server"])
+@register_action(alias=["rds", "rd", "redis-server"])
 def redis(args):
     """
     Runs a local instance of `redis-server` ( required for the chat )
@@ -167,7 +167,7 @@ def redis(args):
     subprocess.run(_cmd)
 
 
-@ register_action(alias=["r"], call=lambda a: run(_is_dev(a)))
+@register_action(alias=["r"], call=lambda a: run(_is_dev(a)))
 def run(dev=True, background=False):
     """
     Running the docker image, this requires a build image to be present.
@@ -190,7 +190,7 @@ def run(dev=True, background=False):
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
 
 
-@ register_action(name="help", alias=["h", "?"])
+@register_action(name="help", alias=["h", "?"])
 def _print_help(a):
     print(main.__doc__)
     _parser().print_help()
