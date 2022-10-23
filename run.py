@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+from ast import alias
+from cProfile import label
+from functools import partial
+from decorator import decorator
 import os
 import sys
 import subprocess
@@ -28,6 +32,25 @@ subprocess_capture_out = {
     "capture_output": True,
     "text": True
 }
+
+ACTIONS = {}  # Populated with the `@register_action` decorator
+
+
+def _dispatch_register_action_decorator(f, name=None, cont=False, call=None, alias=[]):
+    ACTIONS.update({name if name else f.__name__: {
+        "alias": alias,
+        "continue": cont,
+        "func": f,
+        "exec": call if call else lambda a: f(a)
+    }})
+
+    def run(*args, **kwargs):
+        return f(*args, **kwargs)
+    return run
+
+
+def register_action(**kwargs):
+    return partial(_dispatch_register_action_decorator, **kwargs)
 
 
 def _parser():
@@ -63,6 +86,7 @@ def _running_instances():
     return [x for x in ps if TAG in x["Image"]]
 
 
+@register_action(cont=True, alias=["k"])
 def kill():
     """ Kills all the running container instances """
     ps = _running_instances()
@@ -81,11 +105,13 @@ def _run_in_running(dev, commands):
     subprocess.run(" ".join(_cmd), shell=True)
 
 
+@register_action(alias=["s", "sh", "$"], call=lambda a: shell(_is_dev(a)))
 def shell(dev=True):
     """ Run a shell on a running container instance """
     _run_in_running(dev, [c.shell])
 
 
+@register_action(alias=["dump", "backup"])
 def dumpdata(args):
     """ Creates a full database fixture """
     assert _is_dev(args), "Dumping data only allowed in dev"
@@ -98,6 +124,7 @@ def dumpdata(args):
                     "dumpdata", *(["--indent", "2"] if not args.output else []), *output])
 
 
+@register_action(alias=["load", "db_init"])
 def loaddata(args):
     """ Load data from fixture """
     assert _is_dev(args), "Loading fixture data is only allowed in dev"
@@ -106,6 +133,7 @@ def loaddata(args):
                     "dumpdata", "-i", args.input])
 
 
+@register_action(alias=["m"], cont=True)
 def migrate(args):
     """ Migrate db inside docker container """
     run(_is_dev(args), background=True)
@@ -116,6 +144,7 @@ def migrate(args):
     kill()
 
 
+@register_action(alias=["b"], call=lambda a: build(_is_dev(a)))
 def build(dev=True):
     """
     Builds the docker container 
@@ -128,6 +157,7 @@ def build(dev=True):
     subprocess.run(_cmd)
 
 
+@register_action(alias=["rds", "rd", "redis-server"], call=lambda a: redis(_is_dev(a)))
 def redis(dev):
     """
     Runs a local instance of `redis-server` ( required for the chat )
@@ -138,6 +168,7 @@ def redis(dev):
     subprocess.run(_cmd)
 
 
+@register_action(alias=["r"], call=lambda a: run(_is_dev(a)))
 def run(dev=True, background=False):
     """
     Running the docker image, this requires a build image to be present.
@@ -160,60 +191,7 @@ def run(dev=True, background=False):
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
 
 
-ACTIONS = {
-    "redis": {
-        "alias": ["rds", "rd", "redis-server"],
-        "continue": True,
-        "func": redis,
-        "exec": lambda a: redis(_is_dev(a))
-    },
-    "kill": {
-        "alias": ["k"],
-        "func": kill,
-        "exec": lambda a: kill()
-    },
-    "shell": {
-        "alias": ["s", "sh", "$"],
-        "func": shell,
-        "exec": lambda a: shell(_is_dev(a))
-    },
-    "run": {
-        "alias": ["r"],
-        "func": run,
-        "exec": lambda a: run(_is_dev(a))
-    },
-    "build": {
-        "alias": ["b"],
-        "continue": True,
-        "func": build,
-        "exec": lambda a: build(_is_dev(a))
-    },
-    "help": {
-        "alias": ["h", "?"],
-        "continue": False,
-        "exec": lambda a: _print_help(a)
-    },
-    "migrate": {
-        "alias": ["m"],
-        "continue": True,
-        "func": migrate,
-        "exec": lambda a: migrate(a)
-    },
-    "dumpdata": {
-        "alias": ["dump", "backup"],
-        "continue": False,
-        "func": dumpdata,
-        "exec": lambda a: dumpdata(a)
-    },
-    "loaddata": {
-        "alias": ["load", "db_init"],
-        "continue": False,
-        "func": loaddata,
-        "exec": lambda a: loaddata(a)
-    }
-}
-
-
+@register_action(name="help", alias=["h", "?"])
 def _print_help(a):
     print(main.__doc__)
     _parser().print_help()
