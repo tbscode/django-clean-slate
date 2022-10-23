@@ -80,7 +80,6 @@ def _is_dev(a):
 def _running_instances():
     _cmd = ["docker", "ps", "--format",
             r"""{"ID":"{{ .ID }}", "Image": "{{ .Image }}", "Names":"{{ .Names }}"}"""]
-    print(" ".join(_cmd))
     out = str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
     ps = [eval(x) for x in out.split("\n") if x.strip()]
     return [x for x in ps if TAG in x["Image"]]
@@ -144,7 +143,7 @@ def migrate(args):
     kill()
 
 
-@register_action(alias=["b"], call=lambda a: build(_is_dev(a)))
+@register_action(alias=["b"], call=lambda a: build(_is_dev(a)), cont=True)
 def build(dev=True):
     """
     Builds the docker container 
