@@ -104,13 +104,13 @@ def _run_in_running(dev, commands):
     subprocess.run(" ".join(_cmd), shell=True)
 
 
-@register_action(alias=["s", "sh", "$"], call=lambda a: shell(_is_dev(a)))
-def shell(dev=True):
+@register_action(alias=["s", "sh", "$"])
+def shell(args):
     """ Run a shell on a running container instance """
-    _run_in_running(dev, [c.shell])
+    _run_in_running(_is_dev(args), [c.shell])
 
 
-@register_action(alias=["dump", "backup"])
+@ register_action(alias=["dump", "backup"])
 def dumpdata(args):
     """ Creates a full database fixture """
     assert _is_dev(args), "Dumping data only allowed in dev"
@@ -123,7 +123,7 @@ def dumpdata(args):
                     "dumpdata", *(["--indent", "2"] if not args.output else []), *output])
 
 
-@register_action(alias=["load", "db_init"])
+@ register_action(alias=["load", "db_init"])
 def loaddata(args):
     """ Load data from fixture """
     assert _is_dev(args), "Loading fixture data is only allowed in dev"
@@ -132,7 +132,7 @@ def loaddata(args):
                     "dumpdata", "-i", args.input])
 
 
-@register_action(alias=["m"], cont=True)
+@ register_action(alias=["m"], cont=True)
 def migrate(args):
     """ Migrate db inside docker container """
     run(_is_dev(args), background=True)
@@ -143,36 +143,36 @@ def migrate(args):
     kill()
 
 
-@register_action(alias=["b"], call=lambda a: build(_is_dev(a)), cont=True)
-def build(dev=True):
+@ register_action(alias=["b"], cont=True)
+def build(args):
     """
-    Builds the docker container 
+    Builds the docker container
     (if dev): uses the Dockerfile.dev
     """
-    if not dev:
+    if not _is_dev(args):
         raise NotImplementedError
-    _cmd = [*c.dbuild, *c.file, "-t", c.dtag if dev else c.ptag, "."]
+    _cmd = [*c.dbuild, *c.file, "-t", c.dtag if _is_dev(args) else c.ptag, "."]
     print(" ".join(_cmd))
     subprocess.run(_cmd)
 
 
-@register_action(alias=["rds", "rd", "redis-server"], call=lambda a: redis(_is_dev(a)))
-def redis(dev):
+@ register_action(alias=["rds", "rd", "redis-server"])
+def redis(args):
     """
     Runs a local instance of `redis-server` ( required for the chat )
     """
-    assert dev, "Local redis is only for development"
+    assert _is_dev(args), "Local redis is only for development"
     _cmd = [*c.drun, *c.redis_port, "-d", "redis:5"]
     print(' '.join(_cmd))
     subprocess.run(_cmd)
 
 
-@register_action(alias=["r"], call=lambda a: run(_is_dev(a)))
+@ register_action(alias=["r"], call=lambda a: run(_is_dev(a)))
 def run(dev=True, background=False):
     """
     Running the docker image, this requires a build image to be present.
     Rebuild the image when ever you cange packages.
-    if dev: 
+    if dev:
         Then container will mount the local `./back` folder,
         and forward port `c.port` (default 8000)
     """
@@ -190,7 +190,7 @@ def run(dev=True, background=False):
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
 
 
-@register_action(name="help", alias=["h", "?"])
+@ register_action(name="help", alias=["h", "?"])
 def _print_help(a):
     print(main.__doc__)
     _parser().print_help()
@@ -216,7 +216,7 @@ def _action_by_alias(alias):
 
 def main():
     """
-    Entrypoint for `run.py` 
+    Entrypoint for `run.py`
     Using the script requires *only* docker and python!
     e.g:
     `./run.py ?`:
