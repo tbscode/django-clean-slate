@@ -10,11 +10,13 @@ import argparse
 import signal
 import json
 
-TAG = "littleworld"
+TAG = "littleworld_back"
+FRONT_TAG = "littleworld_front"
 PORT = 8000
 
 
 class c:
+    # Backend container stuff
     dbuild = ["docker", "build"]
     drun = ["docker", "run"]
     file = ["-f", "Dockerfile.dev"]
@@ -26,6 +28,11 @@ class c:
     penv = ["--env-file", "./penv"]
     shell = "/bin/bash"
     redis_port = ["-p", "6379:6379"]
+
+    # Frontend container stuff
+    front_docker_file = ["-f", "Dockerfile.front"]
+    vmount_front = ["-v", f"{os.getcwd()}/front:/app"]
+    front_tag = f"{FRONT_TAG}.dev"
 
 
 subprocess_capture_out = {
@@ -65,6 +72,12 @@ def _parser():
     return parser
 
 
+def _env_as_dict(path: str) -> dict:
+    with open(path, 'r') as f:
+        return dict(tuple(line.replace('\n', '').split('=')) for line
+                    in f.readlines() if not line.startswith('#'))
+
+
 def args():
     return _parser().parse_args()
 
@@ -77,18 +90,20 @@ def _is_dev(a):
     return "dev" in a.btype
 
 
-def _running_instances():
+def _running_instances(tag=TAG):
+    """ Get a list of running instance for docker 'tag' """
     _cmd = ["docker", "ps", "--format",
             r"""{"ID":"{{ .ID }}", "Image": "{{ .Image }}", "Names":"{{ .Names }}"}"""]
     out = str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
     ps = [eval(x) for x in out.split("\n") if x.strip()]
-    return [x for x in ps if TAG in x["Image"]]
+    return [x for x in ps if tag in x["Image"]]
 
 
 @register_action(cont=True, alias=["k"])
-def kill():
-    """ Kills all the running container instances """
-    ps = _running_instances()
+def kill(args, front=True, back=True):
+    """ Kills all the running container instances (back & front)"""
+    ps = [*(_running_instances() if back else []),
+          *(_running_instances(tag=FRONT_TAG) if front else [])]
     _cmd = ["docker", "kill"]
     for p in ps:
         _c = _cmd + [p["ID"]]
@@ -96,12 +111,21 @@ def kill():
         subprocess.run(_c)
 
 
-def _run_in_running(dev, commands):
+def _run_in_running(dev, commands, backend=True, capture_out=False, work_dir=None):
+    """
+    Runns command in a running container.
+    Per default this looks for a backend container.
+    It will look for a frontend container with backend=False
+    """
     ps = [x for x in _running_instances() if (
-        "dev" if dev else "prod") in x["Image"]]
+        "dev" if dev else "prod") in x["Image"]] if backend else _running_instances(tag=FRONT_TAG)
     assert len(ps) > 0, "no running instances found"
-    _cmd = ["docker", "exec", "-it", ps[0]["ID"], *commands]
-    subprocess.run(" ".join(_cmd), shell=True)
+    _cmd = ["docker", "exec",
+            *(["-w", work_dir] if work_dir else []), "-it", ps[0]["ID"], *commands]
+    if not capture_out:
+        subprocess.run(" ".join(_cmd), shell=True)
+    else:
+        return str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
 
 
 @register_action(alias=["s", "sh", "$"])
@@ -140,7 +164,7 @@ def migrate(args):
                     "makemigrations"])
     _run_in_running(_is_dev(args), ["python3", "manage.py",
                     "migrate"])
-    kill()
+    kill(args, front=False)
 
 
 @register_action(alias=["b"], cont=True)
@@ -154,6 +178,33 @@ def build(args):
     _cmd = [*c.dbuild, *c.file, "-t", c.dtag if _is_dev(args) else c.ptag, "."]
     print(" ".join(_cmd))
     subprocess.run(_cmd)
+
+
+@register_action(alias=["fb", "bf"], cont=True)
+def build_front(args):
+    """
+    Builds the frontends
+    1. Build the frontend docker image
+    2. Run the container ( keep it running artifically see Dockerfile.front )
+    3. Run `npm i`
+    """
+    if not _is_dev(args):
+        raise NotImplementedError
+    _cmd = [*c.dbuild, *c.front_docker_file, "-t",
+            c.front_tag, "."]
+    print(" ".join(_cmd))
+    subprocess.run(_cmd)  # 1
+    _cmd = [*c.drun, *(c.denv if _is_dev(args) else c.penv), *
+            c.vmount_front, "-d", c.front_tag]
+    env = _env_as_dict(c.denv[1])
+    subprocess.run(_cmd)  # 2
+    _run_in_running(_is_dev(args), ["npm", "i"], backend=False)  # 3
+    frontends = env["FR_FRONTENDS"].split(",")
+    print(f'`npm i` for frontends: {frontends}')
+    # _run_in_running(_is_dev(args), ["sh"], backend=False)  # 3
+    for front in frontends:
+        _run_in_running(
+            _is_dev(args), ["npm", "i"], work_dir=f"/app/apps/{front}", backend=False)  # 3
 
 
 @register_action(alias=["rds", "rd", "redis-server"])
@@ -185,7 +236,7 @@ def run(dev=True, background=False):
     else:
         def handler(signum, frame):
             print("EXITING\nKilling container...")
-            kill()
+            kill(None, front=False)
         signal.signal(signal.SIGINT, handler)
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
 
