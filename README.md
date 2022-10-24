@@ -36,5 +36,6 @@ For info run `./run.py ?` or check the script.
 
 This is still work in progress main missing parts are:
 
-- [ ] automated webpack builds ( dockerized )
+- [ ] Integrate django webpackloader
+- [ ] Example async view and example consumer
 - [ ] seperated repo for example production build
