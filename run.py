@@ -180,6 +180,18 @@ def build(args):
     subprocess.run(_cmd)
 
 
+def _make_webpack_command(env, config, debug: bool, watch: bool):
+    _cmd = [
+        './node_modules/.bin/webpack',
+        *(["--watch"] if watch else []),
+        '--env', f'PUBLIC_PATH={env["WEBPACK_PUBLIC_PATH"]}',
+        '--env', f'DEV_TOOL={env["WEBPACK_DEV_TOOL"]}',
+        '--env', 'DEBUG=1' if debug else 'DEBUG=0',
+        '--mode', 'development' if debug else 'production',
+        '--config', config]
+    return _cmd
+
+
 @register_action(alias=["fb", "bf"], cont=True)
 def build_front(args):
     """
@@ -187,6 +199,9 @@ def build_front(args):
     1. Build the frontend docker image
     2. Run the container ( keep it running artifically see Dockerfile.front )
     3. Run `npm i`
+    4. For all frontends ( check `env.FR_FRONTENDS` ) run `npm i`
+    5. For all frontends run webpack build
+    6. Kill the frontend container
     """
     if not _is_dev(args):
         raise NotImplementedError
@@ -200,11 +215,38 @@ def build_front(args):
     subprocess.run(_cmd)  # 2
     _run_in_running(_is_dev(args), ["npm", "i"], backend=False)  # 3
     frontends = env["FR_FRONTENDS"].split(",")
-    print(f'`npm i` for frontends: {frontends}')
-    # _run_in_running(_is_dev(args), ["sh"], backend=False)  # 3
+    print(
+        f'`npm i` for frontends: {frontends} \nAdd frontends under `FR_FRONTENDS` in env, place them in front/apps/')
     for front in frontends:
         _run_in_running(
-            _is_dev(args), ["npm", "i"], work_dir=f"/app/apps/{front}", backend=False)  # 3
+            _is_dev(args), ["npm", "i"], work_dir=f"/app/apps/{front}", backend=False)  # 4
+    # Frontend builds can only be performed with the webpack configs present
+    with open('./front/webpack.template.js', 'r') as f:
+        webpack_template = f.read()
+    for front in frontends:
+        config_path = f'front/webpack.{front}.config.js'
+        if not os.path.isfile(config_path):
+            # The config doesn't yet exist so we create it from template
+            print(
+                f"webpack config for '{front}' doesn't yet exist, creating '{config_path}'")
+            with open(config_path, 'w') as f:
+                f.write(webpack_template.replace("$frontendName", front))
+            # Then we also have to add the build command to 'front/package.json'
+            # This adds 3 scripts: watch_<front>, build_<front>_dev, build_<front>_prod
+            print("Writing new commands to 'front/package.json'")
+            with open(f'front/package.json', 'r+') as f:
+                package = json.loads(f.read())
+                f.seek(0)
+                package["scripts"].update({
+                    f"watch_{front}": " ".join(_make_webpack_command(env, f'webpack.{front}.config.js', watch=True, debug=True)),
+                    f"build_{front}_dev": " ".join(_make_webpack_command(env, f'webpack.{front}.config.js', watch=False, debug=True)),
+                    f"build_{front}_prod": " ".join(_make_webpack_command(env, f'webpack.{front}.config.js', watch=False, debug=False)),
+                })
+                f.write(json.dumps(package, indent=2))
+                f.truncate()
+        _run_in_running(
+            _is_dev(args), ["npm", "run", f"build_{front}_{args.btype}"], backend=False)
+    kill(args, back=False)
 
 
 @register_action(alias=["rds", "rd", "redis-server"])
