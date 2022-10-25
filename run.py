@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+""" General entry point for backend build and deployment processes """
 from ast import alias
 from cProfile import label
 from functools import partial
@@ -35,7 +36,8 @@ class c:
     front_tag = f"{FRONT_TAG}.dev"
 
     # For making the spinix docs
-    vmount_spinix = ["-v", f"{os.getcwd()}/docs:/docs"]
+    vmount_spinix = ["-v", f"{os.getcwd()}/docs:/docs",
+                     "-v", f"{os.getcwd()}/back:/app"]
     file_spinix = ["-f", "Dockerfile.docs"]
     tag_spinix = "docs.spinix"
 
@@ -324,12 +326,12 @@ def build_docs(args):
     _cmd = [*c.dbuild, *c.file_spinix, "-t", c.tag_spinix, "."]
     print(" ".join(_cmd))
     subprocess.run(_cmd)
-    _cmd = [*c.drun, *c.denv, *c.vmount_spinix, *c.vmount,
-            *c.port, "-d", c.tag_spinix]
+    _cmd = [*c.drun, *c.denv, *c.vmount_spinix, *c.port, "-d", c.tag_spinix]
     print(" ".join(_cmd))
     subprocess.run(_cmd)
     _run_in_running_tag(["make", "html"], tag=c.tag_spinix, work_dir="/docs")
-    _kill_tag(c.tag_spinix)
+    _run_in_running_tag(["sh"], tag=c.tag_spinix)
+    # _kill_tag(c.tag_spinix)
 
 
 @register_action(name="help", alias=["h", "?"])

@@ -6,8 +6,13 @@ WORKDIR /app
 COPY /back/requirements.txt ./
 COPY /docs/requirements.txt ./requirements_docs.txt
 
+
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir -r requirements_docs.txt
+
+# We want the run file to be included in the docs
+COPY ./run.py /extra_mods/
+RUN touch /extra_mods/__init__.py
 
 EXPOSE 8000
 
