@@ -34,6 +34,11 @@ class c:
     vmount_front = ["-v", f"{os.getcwd()}/front:/app"]
     front_tag = f"{FRONT_TAG}.dev"
 
+    # For making the spinix docs
+    vmount_spinix = ["-v", f"{os.getcwd()}/docs:/docs"]
+    file_spinix = ["-f", "Dockerfile.docs"]
+    tag_spinix = "docs.spinix"
+
 
 subprocess_capture_out = {
     "capture_output": True,
@@ -109,6 +114,16 @@ def kill(args, front=True, back=True):
         _c = _cmd + [p["ID"]]
         print(' '.join(_c))
         subprocess.run(_c)
+    # TODO: make use of the _kill_tag function below
+
+
+def _kill_tag(tag):
+    ps = _running_instances(tag)
+    _cmd = ["docker", "kill"]
+    for p in ps:
+        _c = _cmd + [p["ID"]]
+        print(' '.join(_c))
+        subprocess.run(_c)
 
 
 def _run_in_running(dev, commands, backend=True, capture_out=False, work_dir=None):
@@ -119,6 +134,21 @@ def _run_in_running(dev, commands, backend=True, capture_out=False, work_dir=Non
     """
     ps = [x for x in _running_instances() if (
         "dev" if dev else "prod") in x["Image"]] if backend else _running_instances(tag=FRONT_TAG)
+    assert len(ps) > 0, "no running instances found"
+    _cmd = ["docker", "exec",
+            *(["-w", work_dir] if work_dir else []), "-it", ps[0]["ID"], *commands]
+    if not capture_out:
+        subprocess.run(" ".join(_cmd), shell=True)
+    else:
+        return str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
+
+
+# TODO this should be merged with the above method
+def _run_in_running_tag(commands, tag, capture_out=False, work_dir=None):
+    """
+    Runns command in a running container, with a specific tag
+    """
+    ps = _running_instances(tag)
     assert len(ps) > 0, "no running instances found"
     _cmd = ["docker", "exec",
             *(["-w", work_dir] if work_dir else []), "-it", ps[0]["ID"], *commands]
@@ -196,6 +226,7 @@ def _make_webpack_command(env, config, debug: bool, watch: bool):
 def build_front(args):
     """
     Builds the frontends
+    This whole process is dockerized so you don't need any local nodejs installation ( but if wanted a local nodejs installation can be used also )
     1. Build the frontend docker image
     2. Run the container ( keep it running artifically see Dockerfile.front )
     3. Run `npm i`
@@ -281,6 +312,24 @@ def run(dev=True, background=False):
             kill(None, front=False)
         signal.signal(signal.SIGINT, handler)
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
+
+
+@register_action(name="build_docs", alias=["docs"])
+def build_docs(args):
+    """ 
+    Can build the spinix documentation inside the docker container 
+    Note: This assumes you have already build the docker backend container
+    """
+    assert _is_dev(args), "Can only build docs in development mode"
+    _cmd = [*c.dbuild, *c.file_spinix, "-t", c.tag_spinix, "."]
+    print(" ".join(_cmd))
+    subprocess.run(_cmd)
+    _cmd = [*c.drun, *c.denv, *c.vmount_spinix, *c.vmount,
+            *c.port, "-d", c.tag_spinix]
+    print(" ".join(_cmd))
+    subprocess.run(_cmd)
+    _run_in_running_tag(["make", "html"], tag=c.tag_spinix, work_dir="/docs")
+    _kill_tag(c.tag_spinix)
 
 
 @register_action(name="help", alias=["h", "?"])
