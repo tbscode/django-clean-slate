@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """ General entry point for backend build and deployment processes """
+import shutil 
 from functools import partial, wraps
 import os
 import sys
@@ -330,6 +331,8 @@ def build_docs(args):
     _run_in_running_tag(["make", "html"], tag=c.tag_spinix, work_dir="/docs")
     #_run_in_running_tag(["sh"], tag=c.tag_spinix)
     _kill_tag(c.tag_spinix)
+    # copy the output files
+    shutil.copytree("./_docs/build/html", "./docs")
 
 
 @register_action(name="help", alias=["h", "?"])
