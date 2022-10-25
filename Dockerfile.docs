@@ -4,7 +4,7 @@ FROM python:3.8
 WORKDIR /app
 
 COPY /back/requirements.txt ./
-COPY /docs/requirements.txt ./requirements_docs.txt
+COPY /_docs/requirements.txt ./requirements_docs.txt
 
 
 RUN pip install --no-cache-dir -r requirements.txt
