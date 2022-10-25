@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>extra_mods.run module &mdash; Django  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Django
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">extra_mods.run module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Django</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>extra_mods.run module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/apidoc/extra_mods.run.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-extra_mods.run">
+<span id="extra-mods-run-module"></span><h1>extra_mods.run module<a class="headerlink" href="#module-extra_mods.run" title="Permalink to this headline">¶</a></h1>
+<p>General entry point for backend build and deployment processes</p>
+<dl class="function">
+<dt id="extra_mods.run.kill">
+<code class="descclassname">extra_mods.run.</code><code class="descname">kill</code><span class="sig-paren">(</span><em>args</em>, <em>front=True</em>, <em>back=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#kill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kills all the running container instances (back &amp; front)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.shell">
+<code class="descclassname">extra_mods.run.</code><code class="descname">shell</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#shell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.shell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a shell on a running container instance</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.dumpdata">
+<code class="descclassname">extra_mods.run.</code><code class="descname">dumpdata</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#dumpdata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.dumpdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a full database fixture</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.loaddata">
+<code class="descclassname">extra_mods.run.</code><code class="descname">loaddata</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#loaddata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.loaddata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from fixture</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.migrate">
+<code class="descclassname">extra_mods.run.</code><code class="descname">migrate</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#migrate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.migrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Migrate db inside docker container</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.build">
+<code class="descclassname">extra_mods.run.</code><code class="descname">build</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the docker container
+(if dev): uses the Dockerfile.dev</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.build_front">
+<code class="descclassname">extra_mods.run.</code><code class="descname">build_front</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#build_front"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.build_front" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the frontends
+This whole process is dockerized so you don’t need any local nodejs installation ( but if wanted a local nodejs installation can be used also )
+1. Build the frontend docker image
+2. Run the container ( keep it running artifically see Dockerfile.front )
+3. Run <cite>npm i</cite>
+4. For all frontends ( check <cite>env.FR_FRONTENDS</cite> ) run <cite>npm i</cite>
+5. For all frontends run webpack build
+6. Kill the frontend container</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.redis">
+<code class="descclassname">extra_mods.run.</code><code class="descname">redis</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#redis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.redis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a local instance of <cite>redis-server</cite> ( required for the chat )</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.run">
+<code class="descclassname">extra_mods.run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>dev=True</em>, <em>background=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running the docker image, this requires a build image to be present.
+Rebuild the image when ever you cange packages.
+if dev:</p>
+<blockquote>
+<div>Then container will mount the local <cite>./back</cite> folder,
+and forward port <cite>c.port</cite> (default 8000)</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.build_docs">
+<code class="descclassname">extra_mods.run.</code><code class="descname">build_docs</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#build_docs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.build_docs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can build the spinix documentation inside the docker container 
+Note: This assumes you have already build the docker backend container</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="extra_mods.run.main">
+<code class="descclassname">extra_mods.run.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/extra_mods/run.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#extra_mods.run.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entrypoint for <cite>run.py</cite>
+Using the script requires <em>only</em> docker and python!
+e.g:
+<cite>./run.py ?</cite>:</p>
+<blockquote>
+<div>Show basic doc/ help message</div></blockquote>
+<dl class="docutils">
+<dt><cite>./run.py</cite>:</dt>
+<dd>Default; Build, then run development container</dd>
+<dt><cite>./run.py build run redis</cite>:</dt>
+<dd>Also start redis server for local dev</dd>
+<dt><cite>./run.py shell</cite>:</dt>
+<dd>Login to <cite>c.shell</cite> on a <em>running</em> container</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Tim Schupp
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
