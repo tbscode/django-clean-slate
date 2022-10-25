@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ General entry point for backend build and deployment processes """
-import shutil 
+import shutil
 from functools import partial, wraps
 import os
 import sys
@@ -75,6 +75,9 @@ def _parser():
         '-i', '--input', help="Input file required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
                         "build", "migrate", "run"], nargs='?', help='action')
+    parser.add_argument('-c', '--cmd', nargs='+',
+                        help='Passing command input')
+
     return parser
 
 
@@ -313,6 +316,13 @@ def run(dev=True, background=False):
             kill(None, front=False)
         signal.signal(signal.SIGINT, handler)
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
+
+
+@register_action(alias=["ma", "manage", "manage.py"])
+def manage_command(args):
+    """ runns a manage.py command inside the container """
+    assert args.cmd, "command list required '-c' ..."
+    _run_in_running(_is_dev(args), ["python3", "manage.py", *args.cmd])
 
 
 @register_action(name="build_docs", alias=["docs"])
