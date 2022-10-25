@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ General entry point for backend build and deployment processes """
-from functools import partial
+from functools import partial, wraps
 import os
 import sys
 import subprocess
@@ -55,6 +55,7 @@ def _dispatch_register_action_decorator(f, name=None, cont=False, call=None, ali
         "exec": call if call else lambda a: f(a)
     }})
 
+    @wraps(f)
     def run(*args, **kwargs):
         return f(*args, **kwargs)
     return run
