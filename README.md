@@ -26,6 +26,11 @@ Frontend:
 
 > As alternative to serving static js bundles this stack might be updated to use django-nextjs
 
+## Documentation
+
+Are automaticly generated using `sphinx` and published to [Git Hub Pages](https://tbscode.github.io/django-clean-slate).
+Docs can be generated localy using `./run.py docs` or automaticly using a github workflow: TODO
+
 ## Tools
 
 `run.py` manages full docker and frontend builds.
