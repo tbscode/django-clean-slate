@@ -1,0 +1,32 @@
+name: Build docs and push to 'gh-pages' branch
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  make_docs:
+    runs-on: ubuntu-latest
+    name: Build, checkut gh actions
+    steps:
+      - uses: actions/checkout@master
+      - name: Check out the gh-pages branch
+        uses: actions/checkout@master
+        with:
+          path: ./gh-pages
+          submodules: recursive
+          token: ${{ secrets.MY_REPO_PAT }}
+      - name: Build docs
+        run: python3 run.py docs
+      - name: Copy generated docs
+        run: cp -r ./docs/* ./gh-pages
