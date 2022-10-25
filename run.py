@@ -33,7 +33,7 @@ class c:
     front_tag = f"{FRONT_TAG}.dev"
 
     # For making the spinix docs
-    vmount_spinix = ["-v", f"{os.getcwd()}/docs:/docs",
+    vmount_spinix = ["-v", f"{os.getcwd()}/_docs:/docs",
                      "-v", f"{os.getcwd()}/back:/app/backend"]
     file_spinix = ["-f", "Dockerfile.docs"]
     tag_spinix = "docs.spinix"
