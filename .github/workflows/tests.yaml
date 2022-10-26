@@ -25,4 +25,4 @@ jobs:
         run: python3 run.py -bg
       - name: Run Tests
         # Runns 'manage.py' test in the container
-        run: python3 run.py ma test
+        run: python3 run.py ma -c test
