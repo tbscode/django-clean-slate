@@ -17,7 +17,7 @@ Backend:
 
 - django ( 4.1.2 )
   - General backend routing and authentication
-- channels + daphne ( 4.0.0 )
+- channels ( 4.0.0 )
   - async asgi application interface and websocket handlers
 - celery ( 5.2.7 )
   - background ad reoccuring task management
