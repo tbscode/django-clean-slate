@@ -69,6 +69,8 @@ def register_action(**kwargs):
 def _parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--btype', default="dev", help="prod, dev, any")
+    parser.add_argument('-bg', '--background',
+                        action="store_true", help="Run the docker container in background (`./run.py kill` to stop)")
     parser.add_argument(
         '-o', '--output', help="Ouput file or path required by some actions")
     parser.add_argument(
@@ -193,7 +195,7 @@ def loaddata(args):
 @register_action(alias=["m"], cont=True)
 def migrate(args):
     """ Migrate db inside docker container """
-    run(_is_dev(args), background=True)
+    _run(_is_dev(args), background=True)
     _run_in_running(_is_dev(args), ["python3", "manage.py",
                     "makemigrations"])
     _run_in_running(_is_dev(args), ["python3", "manage.py",
@@ -295,8 +297,8 @@ def redis(args):
     subprocess.run(_cmd)
 
 
-@register_action(alias=["r"], call=lambda a: run(_is_dev(a)))
-def run(dev=True, background=False):
+@register_action(alias=["r"])
+def run(args):
     """
     Running the docker image, this requires a build image to be present.
     Rebuild the image when ever you cange packages.
@@ -304,6 +306,10 @@ def run(dev=True, background=False):
         Then container will mount the local `./back` folder,
         and forward port `c.port` (default 8000)
     """
+    return _run(dev=_is_dev(args), background=args.background)
+
+
+def _run(dev=True, background=False):
     _cmd = [*c.drun, *(c.denv if dev else c.penv), *c.vmount,
             *c.port, "-d" if background else "-t", c.dtag if dev else c.ptag]
     print(" ".join(_cmd))
