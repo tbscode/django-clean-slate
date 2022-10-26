@@ -141,7 +141,7 @@
   <h1>Source code for extra_mods.run</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="sd">&quot;&quot;&quot; General entry point for backend build and deployment processes &quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">shutil</span> 
+<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span><span class="p">,</span> <span class="n">wraps</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -216,6 +216,9 @@
         <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="s1">&#39;--input&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input file required by some actions&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;actions&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[</span>
                         <span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="s2">&quot;migrate&quot;</span><span class="p">,</span> <span class="s2">&quot;run&quot;</span><span class="p">],</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;action&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;--cmd&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Passing command input&#39;</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">parser</span>
 
 
@@ -454,6 +457,13 @@
             <span class="n">kill</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_cmd</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="manage_command"><a class="viewcode-back" href="../../apidoc/extra_mods.run.html#extra_mods.run.manage_command">[docs]</a><span class="nd">@register_action</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ma&quot;</span><span class="p">,</span> <span class="s2">&quot;manage&quot;</span><span class="p">,</span> <span class="s2">&quot;manage.py&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">manage_command</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; runns a manage.py command inside the container &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">args</span><span class="o">.</span><span class="n">cmd</span><span class="p">,</span> <span class="s2">&quot;command list required &#39;-c&#39; ...&quot;</span>
+    <span class="n">_run_in_running</span><span class="p">(</span><span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;python3&quot;</span><span class="p">,</span> <span class="s2">&quot;manage.py&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="o">.</span><span class="n">cmd</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="build_docs"><a class="viewcode-back" href="../../apidoc/extra_mods.run.html#extra_mods.run.build_docs">[docs]</a><span class="nd">@register_action</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;build_docs&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;docs&quot;</span><span class="p">])</span>
