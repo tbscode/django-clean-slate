@@ -1,5 +1,7 @@
 # django clean slate by tbscode
 
+![Django Tests + Container Build](https://github.com/tbscode/django-clean-slate/actions/workflows/tests.yml/badge.svg)
+
 This is a clean slate fullstack web setup.
 
 system requirements: `python > 3.8`, `docker`
