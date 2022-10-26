@@ -21,10 +21,10 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Build Image
-       shell: 'script -q -e -c "bash {0}"'
         # We use '-b' to run the container in background
+      shell: 'script -q -e -c "bash {0}"'
         run: python3 run.py -bg
       - name: Run Tests
-       shell: 'script -q -e -c "bash {0}"'
         # Runns 'manage.py' test in the container
+      shell: 'script -q -e -c "bash {0}"'
         run: python3 run.py ma -c test
