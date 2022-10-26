@@ -2,7 +2,7 @@ name: Build docs and push to 'gh-pages' branch
 
 on:
   push:
-    branches: ['main']
+    branches: ['fix-gh-pages2']
   workflow_dispatch:
 
 permissions:
@@ -21,12 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Build docs
+        # use script ... to workaround (https://github.com/actions/runner/issues/241)
+        shell: 'script -q -e -c "bash {0}"'
         run: python3 run.py docs
       - name: Check out the gh-pages branch
         uses: actions/checkout@master
         with:
           path: ./gh-pages
+          ref: gh-pages
           submodules: recursive
           token: ${{ github.token }}
       - name: Copy generated docs
-        run: cp -r ./docs/* ./gh-pages
+        shell: 'script -q -e -c "bash {0}"'
+        run: |
+          cp -r docs/* ./gh-pages/
+          cd gh-pages
