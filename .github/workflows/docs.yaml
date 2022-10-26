@@ -1,8 +1,6 @@
-name: Build docs and push to 'gh-pages' branch
+name: Build Docs
 
 on:
-  push:
-    branches: ['fix-gh-pages2']
   workflow_dispatch:
 
 permissions:
@@ -31,7 +29,7 @@ jobs:
           ref: gh-pages
           submodules: recursive
           token: ${{ github.token }}
-      - name: Copy generated docs
+      - name: Copy generated docs and push to 'gh-pages' branch
         shell: 'script -q -e -c "bash {0}"'
         run: |
           cp -r docs/* ./gh-pages/
