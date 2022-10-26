@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@master
       - name: Build Image
         # We use '-b' to run the container in background
-        run: python3 run.py -b
+        run: python3 run.py -bg
       - name: Run Tests
         # Runns 'manage.py' test in the container
         run: python3 run.py ma test
