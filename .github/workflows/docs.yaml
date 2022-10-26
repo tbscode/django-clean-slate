@@ -36,3 +36,5 @@ jobs:
         run: |
           cp -r docs/* ./gh-pages/
           cd gh-pages
+          ls
+          git status .
