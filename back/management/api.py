@@ -10,16 +10,20 @@ class Throttle200TimesPerDay(UserRateThrottle):
     rate = '2000/day'
 
 
+@throttle_classes([Throttle200TimesPerDay])
 @api_view(['GET'])
-@throttle_classes(Throttle200TimesPerDay)
-@method_decorator(cache_page(60*60*2))
-@method_decorator(vary_on_headers("Authorization",))
+@vary_on_headers("Authorization",)
+# TODO: invalidate chache whenever user state changes e.g.: new match
+@cache_page(60*60*2)
 def user_app_data(request):
     """
     Returns the main application data for a given user
     """
     return Response({
-        "self": [],
+        "self": {
+            "info": "self info",
+            "profile": "profile"
+        },
         "matches": [{
             "info": "some info placeholder",
             "profile": "some profile placeholder"

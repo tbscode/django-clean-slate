@@ -12,6 +12,7 @@ management: for user management and general api usage
 
 INSTALLED_APPS = [
     'management',
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

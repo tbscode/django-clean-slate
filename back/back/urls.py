@@ -7,6 +7,6 @@ Admin paths registered last
 """
 
 urlpatterns = [
-    path('/', include('management.urls')),
+    path('', include('management.urls')),
     path('admin/', admin.site.urls),
 ]
