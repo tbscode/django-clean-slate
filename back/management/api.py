@@ -15,6 +15,7 @@ class Throttle200TimesPerDay(UserRateThrottle):
 @vary_on_headers("Authorization",)
 # TODO: invalidate chache whenever user state changes e.g.: new match
 @cache_page(60*60*2)
+# Waithin on 'async' support for DRF: https://github.com/encode/django-rest-framework/discussions/7774
 def user_app_data(request):
     """
     Returns the main application data for a given user
@@ -22,7 +23,8 @@ def user_app_data(request):
     return Response({
         "self": {
             "info": "self info",
-            "profile": "profile"
+            "profile": "profile",
+            "state": "state"
         },
         "matches": [{
             "info": "some info placeholder",
