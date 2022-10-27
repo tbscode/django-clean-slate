@@ -29,6 +29,15 @@ Frontend:
 
 > As alternative to serving static js bundles this stack might be updated to use django-nextjs
 
+## Deployment
+
+The **production** application is suppsed to be deployed with Kubernetes `k8s.io` ( configurations are **not included** in this repo ).
+For production I recommend a pooled postgressql database, a redis memory store (for websocket support), a s3 storage bucked for serving static files and a load balanced k8 node pool. This configuration allowes full horizontal - on demand - scaling.
+
+This repo offers a **staging** deployment! For staging we can easily use [`white-noise`](http://whitenoise.evans.io/en/stable/) to serve static files, a simple in-container redis instance and a simple in-container sqllite database. This can be auto deployed on a free-tier Heroku instance - or similar - using the `Dockerfile.stage` in combination with a github workflow.
+
+This even offers the flexibility of seperate staging for seperate developers simply by opening mulitple Heroku accounts.
+
 ## Documentation
 
 Are automaticly generated using `sphinx` and published to [Git Hub Pages](https://tbscode.github.io/django-clean-slate).
