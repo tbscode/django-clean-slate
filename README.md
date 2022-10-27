@@ -38,6 +38,8 @@ This repo offers a **staging** deployment! For staging we can easily use [`white
 
 This even offers the flexibility of seperate staging for seperate developers simply by opening mulitple Heroku accounts.
 
+> If you wan't to use this 'clean-slate' for a hoppy project a free ( or hobby ) tier Heroku instance might be completely sufficient
+
 ## Documentation
 
 Are automaticly generated using `sphinx` and published to [Git Hub Pages](https://tbscode.github.io/django-clean-slate).
