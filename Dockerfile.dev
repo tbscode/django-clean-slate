@@ -8,4 +8,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "back.asgi:application"]
+# Would have went with daphne but no hot reloading (https://github.com/django/daphne/issues/9) is quire problematic
+CMD ["uvicorn", "back.asgi:application" ,"--reload", "--port", "8000","--host", "0.0.0.0"]
