@@ -86,7 +86,8 @@ class RegistrationSerializer(serializers.Serializer):
 def register(request):
     """
     Register any user
-    e.g.: `curl --data "first_name=tim&second_name=schupp&email=benjamin.tim@gmx.de" http://localhost:8000/api/v1/register/`
+    e.g.:
+    curl --data "first_name=tim&second_name=schupp&email=test@gmail.com&password1=was&password2=was" http://localhost:8000/api/v1/register/
     """
     serializer = RegistrationSerializer(data=request.data)
     if serializer.is_valid():
