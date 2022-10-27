@@ -61,7 +61,9 @@ class RegistrationSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         # Password same validation happens in 'validate()' we need only one password now
-        return RegistrationData(**{k: v for k, v in validated_data.items() if k not in ["password1", "password2"]}, password=validated_data['password1'])
+        return RegistrationData(
+            **{k: v for k, v in validated_data.items() if k not in ["password1", "password2"]},
+            password=validated_data['password1'])
 
     def validate(self, data):
         user = get_user_model()(
