@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # this assumes all the frontends are build and the static files have already been moved to ./back/static
 ADD back /app/
 
-EXPOSE 8000
+#EXPOSE 8000
 
-CMD ["uvicorn", "back.asgi:application" ,"--port", "8000","--host", "0.0.0.0"]
+# Heroku docs arent very clear here but it seems they just define their own port
+CMD uvicorn back.asgi:application --port $PORT --host 0.0.0.0
