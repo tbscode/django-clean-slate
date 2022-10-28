@@ -2,6 +2,7 @@
 
 ![Django Tests + Container Build](https://github.com/tbscode/django-clean-slate/actions/workflows/tests.yaml/badge.svg)
 ![Build Docs](https://github.com/tbscode/django-clean-slate/actions/workflows/docs.yaml/badge.svg)
+![Staging Deployment](https://github.com/tbscode/django-clean-slate/actions/workflows/stage.yaml/badge.svg)
 
 This is a clean slate fullstack web setup.
 
@@ -28,6 +29,19 @@ Frontend:
 - react app(s) ( bundled with webpack )
 
 > As alternative to serving static js bundles this stack might be updated to use django-nextjs
+
+## Deployment
+
+The 'staging' version is currently deployed at: https://django-clean-slate-staging.herokuapp.com/
+
+The **production** application is suppsed to be deployed with Kubernetes `k8s.io` ( configurations are **not included** in this repo ).
+For production I recommend a pooled postgressql database, a redis memory store (for websocket support), a s3 storage bucked for serving static files and a load balanced k8 node pool. This configuration allowes full horizontal - on demand - scaling.
+
+This repo offers a **staging** deployment! For staging we can easily use [`white-noise`](http://whitenoise.evans.io/en/stable/) to serve static files, a simple in-container redis instance and a simple in-container sqllite database. This can be auto deployed on a free-tier Heroku instance - or similar - using the `Dockerfile.stage` in combination with a github workflow.
+
+This even offers the flexibility of seperate staging for seperate developers simply by opening mulitple Heroku accounts.
+
+> If you wan't to use this 'clean-slate' for a hoppy project a free ( or hobby ) tier Heroku instance might be completely sufficient
 
 ## Documentation
 
