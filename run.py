@@ -42,6 +42,7 @@ class c:
     # Staging server
     file_staging = ["-f", "Dockerfile.stage"]
     staging_tag = f"{TAG}.stage"
+    stage_env = "./env_stage"
 
 
 subprocess_capture_out = {
@@ -240,7 +241,22 @@ def deploy_staging(args):
         heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
     # Build Dockerfile.stage
     _build_file_tag(c.file_staging[1], c.staging_tag)
-    # Tag the image with the heroku repo
+    # We need to check if heroku config vars need updating
+    env_statge = _env_as_dict(c.stage_env)
+    for k in env_statge:
+        _cmd = ["heroku", "config:get",
+                k, f"--app={heroku_env['HEROKU_APP_NAME']}"]
+        var = str(subprocess.run(
+            _cmd, **subprocess_capture_out).stdout).replace('\n', '')
+        if var == env_statge[k]:
+            print(f"{k} ('{env_statge[k]}') didn't change progressing")
+        else:
+            print(f"Change detected: '{var}' vs '{env_statge[k]}'")
+            print(f"updating heroku config var: {k} -> {env_statge[k]}")
+            _cmd = ["heroku", "config:set",
+                    f"{k}={env_statge[k]}", f"--app={heroku_env['HEROKU_APP_NAME']}"]
+            subprocess.run(_cmd)
+    # Tag the image with the heroku repo, and push it:
     img = _docker_images(repo=c.staging_tag, tag="latest")
     assert len(img) == 1, \
         f"Multiple or no 'latest' image for name {c.staging_tag} found"
