@@ -72,6 +72,15 @@ def register_action(**kwargs):
 
 
 def _parser():
+    """
+    Commandline args:
+    most notably 'actions' 
+        the default ( -> `./run.py` ) is configured for development to run the following steps
+        1. Build docker image ( required for all the following steps)
+        2. static extraction
+        3. mirations for the db
+        4. running the container interactively ( close with ctl-C )
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--btype', default="dev", help="prod, dev, any")
     parser.add_argument('-bg', '--background',
@@ -81,7 +90,7 @@ def _parser():
     parser.add_argument(
         '-i', '--input', help="Input file (or data) required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
-                        "build", "migrate", "run"], nargs='?', help='action')
+                        "build", "static", "migrate", "run"], nargs='?', help='action')
     parser.add_argument('-c', '--cmd', nargs='+',
                         help='Passing command input')
 
@@ -96,10 +105,6 @@ def _env_as_dict(path: str) -> dict:
 
 def args():
     return _parser().parse_args()
-
-
-def extract_static():
-    pass
 
 
 def _is_dev(a):
@@ -279,6 +284,17 @@ def build(args):
     if not _is_dev(args):
         raise NotImplementedError
     _build_file_tag(c.file[1], c.dtag if _is_dev(args) else c.ptag)
+
+
+@register_action(alias=["static", "collectstatic"], cont=True)
+def extract_static(args):
+    # TODO: here and in the migrate command the '_run' and 'kill' should be conditional,
+    # they should only be used when this is run as a 'singular' command!
+    # Otherwise this causes unnecessary app restarts
+    _run(_is_dev(args), background=True)
+    _run_in_running(_is_dev(args), ["python3", "manage.py",
+                    "collectstatic"])
+    kill(args, front=False)
 
 
 def _make_webpack_command(env, config, debug: bool, watch: bool):
