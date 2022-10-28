@@ -31,6 +31,8 @@ Frontend:
 
 ## Deployment
 
+The 'staging' version is currently deployed at: https://django-clean-slate-staging.herokuapp.com/
+
 The **production** application is suppsed to be deployed with Kubernetes `k8s.io` ( configurations are **not included** in this repo ).
 For production I recommend a pooled postgressql database, a redis memory store (for websocket support), a s3 storage bucked for serving static files and a load balanced k8 node pool. This configuration allowes full horizontal - on demand - scaling.
 
