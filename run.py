@@ -78,7 +78,7 @@ def _parser():
     parser.add_argument(
         '-o', '--output', help="Ouput file or path required by some actions")
     parser.add_argument(
-        '-i', '--input', help="Input file required by some actions")
+        '-i', '--input', help="Input file (or data) required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
                         "build", "migrate", "run"], nargs='?', help='action')
     parser.add_argument('-c', '--cmd', nargs='+',
@@ -112,6 +112,20 @@ def _running_instances(tag=TAG):
     out = str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
     ps = [eval(x) for x in out.split("\n") if x.strip()]
     return [x for x in ps if tag in x["Image"]]
+
+
+def _docker_images(repo=TAG, tag=None):
+    """ Runins a list of docke images filtered by 'repo' """
+    _cmd = ["docker", "images", "--format", '"{{json . }}"']
+    out = str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
+    images = [eval(x[1:-1]) for x in out.split("\n") if x.strip()]
+    _filtered_images = []
+    for img in images:
+        repo_cond = repo in img['Repository']
+        tag_cond = tag is None or tag in img['Tag']
+        if all([repo_cond, tag_cond]):
+            _filtered_images.append(img)
+    return _filtered_images
 
 
 @register_action(cont=True, alias=["k"])
@@ -206,20 +220,37 @@ def migrate(args):
                     "migrate"])
     kill(args, front=False)
 
+
 def _build_file_tag(file, tag):
-    _cmd = [*c.dbuild, "-f", file , "-t", tag, "."]
+    _cmd = [*c.dbuild, "-f", file, "-t", tag, "."]
     print(" ".join(_cmd))
     subprocess.run(_cmd)
 
+
 @register_action(alias=["stage"])
-def build_staging(args):
+def deploy_staging(args):
     """
-    Build the dockerfile for the staging server
+    Build and push the dockerfile for the staging server
+    This acction requires some config params passed via -i 
+    e.g.: -i "{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}"
     """
+    assert args.input, " '-i' required, e.g.: \"{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}\""
+    heroku_env = eval(args.input)
+    if not 'HEROKU_REGISTRY_URL' in heroku_env:  # The registry url can componly be infered from the app name
+        heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
+    # Build Dockerfile.stage
     _build_file_tag(c.file_staging[1], c.staging_tag)
-    # TODO: this should prob be part of the build command but use --btype staging
-    _cmd = [*c.drun, *c.denv, *c.vmount, *c.port, "-d", c.staging_tag]
-    print(" ".join(_cmd))
+    # Tag the image with the heroku repo
+    img = _docker_images(repo=c.staging_tag, tag="latest")
+    assert len(img) == 1, \
+        f"Multiple or no 'latest' image for name {c.staging_tag} found"
+    print(img)
+    _cmd = ["docker", "tag", img[0]["ID"], heroku_env['HEROKU_REGISTRY_URL']]
+    subprocess.run(_cmd)
+    _cmd = ["docker", "push", heroku_env['HEROKU_REGISTRY_URL']]
+    subprocess.run(_cmd)
+    _cmd = ["heroku", "container:release", "web",
+            f"--app={heroku_env['HEROKU_APP_NAME']}"]
     subprocess.run(_cmd)
 
 
@@ -325,6 +356,7 @@ def run(args):
         and forward port `c.port` (default 8000)
     """
     return _run(dev=_is_dev(args), background=args.background)
+
 
 def _run(dev=True, background=False):
     _cmd = [*c.drun, *(c.denv if dev else c.penv), *c.vmount,
