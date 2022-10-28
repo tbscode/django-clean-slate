@@ -48,7 +48,15 @@ This even offers the flexibility of seperate staging for seperate developers sim
 Are automaticly generated using `sphinx` and published to [Git Hub Pages](https://tbscode.github.io/django-clean-slate).
 Docs can be generated localy using `./run.py docs` or automaticly using a github workflow.
 
-e.g.: see full documentation of `./run.py` [here](https://tbscode.github.io/django-clean-slate/apidoc/extra_mods.run.html#module-extra_mods.run)
+e.g.: see full documentation of `./run.py` [here](https://tbscode.github.io/django-clean-slate/apidoc/extra_mods.run.html#module-extra_mods.run).
+
+### API documentation
+
+Using `https://github.com/tfranzel/drf-spectacular` to generate open api schemas from DRF.
+Open API shemas for swagger and redoc are avaiable at:
+
+- [`/api/schema/swagger-ui/`](https://django-clean-slate-staging.herokuapp.com/)
+- [`/api/schema/redoc/`](https://django-clean-slate-staging.herokuapp.com/)
 
 ## Tools
 
