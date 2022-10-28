@@ -2,6 +2,7 @@
 
 ![Django Tests + Container Build](https://github.com/tbscode/django-clean-slate/actions/workflows/tests.yaml/badge.svg)
 ![Build Docs](https://github.com/tbscode/django-clean-slate/actions/workflows/docs.yaml/badge.svg)
+![Staging Deployment](https://github.com/tbscode/django-clean-slate/actions/workflows/stage.yaml/badge.svg)
 
 This is a clean slate fullstack web setup.
 
