@@ -39,6 +39,10 @@ class c:
     file_spinix = ["-f", "Dockerfile.docs"]
     tag_spinix = "docs.spinix"
 
+    # Staging server
+    file_staging = ["-f", "Dockerfile.stage"]
+    staging_tag = f"{TAG}.stage"
+
 
 subprocess_capture_out = {
     "capture_output": True,
@@ -202,6 +206,22 @@ def migrate(args):
                     "migrate"])
     kill(args, front=False)
 
+def _build_file_tag(file, tag):
+    _cmd = [*c.dbuild, "-f", file , "-t", tag, "."]
+    print(" ".join(_cmd))
+    subprocess.run(_cmd)
+
+@register_action(alias=["stage"])
+def build_staging(args):
+    """
+    Build the dockerfile for the staging server
+    """
+    _build_file_tag(c.file_staging[1], c.staging_tag)
+    # TODO: this should prob be part of the build command but use --btype staging
+    _cmd = [*c.drun, *c.denv, *c.vmount, *c.port, "-d", c.staging_tag]
+    print(" ".join(_cmd))
+    subprocess.run(_cmd)
+
 
 @register_action(alias=["b"], cont=True)
 def build(args):
@@ -211,9 +231,7 @@ def build(args):
     """
     if not _is_dev(args):
         raise NotImplementedError
-    _cmd = [*c.dbuild, *c.file, "-t", c.dtag if _is_dev(args) else c.ptag, "."]
-    print(" ".join(_cmd))
-    subprocess.run(_cmd)
+    _build_file_tag(c.file[1], c.dtag if _is_dev(args) else c.ptag)
 
 
 def _make_webpack_command(env, config, debug: bool, watch: bool):
@@ -307,7 +325,6 @@ def run(args):
         and forward port `c.port` (default 8000)
     """
     return _run(dev=_is_dev(args), background=args.background)
-
 
 def _run(dev=True, background=False):
     _cmd = [*c.drun, *(c.denv if dev else c.penv), *c.vmount,
