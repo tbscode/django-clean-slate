@@ -32,6 +32,9 @@ print(f'Installed apps:\n' + '\n- '.join(INSTALLED_APPS))
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    *([  # Whitenoise to server static only needed in staging or development
+        'whitenoise.middleware.WhiteNoiseMiddleware',
+    ] if BUILD_TYPE in ['staging', 'development'] else []),
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -67,6 +70,7 @@ STATICFILES_DIRS = [
 ]
 
 
+WSGI_APPLICATION = "back.wsgi.application"
 ASGI_APPLICATION = "back.asgi.application"
 
 CELERY_TIMEZONE = os.environ['DJ_CELERY_TIMEZONE']
