@@ -7,7 +7,7 @@ jobs:
     if: ${{ github.event.issue.pull_request }} # Check only pull request for now
     runs-on: [ubuntu-latest]
     steps:
-      - name: say hello
+      - name: deploy staging
         if: contains(github.event.comment.body, '/stage')
-        run: |
-          echo will be used to trigger staging in the future!
+        uses: ./.github/workflows/stage.yaml
+      - run: echo ${{ github.event.changes.body.from }}

@@ -1,7 +1,15 @@
-name: Deploy
+name: Deploy Staging
 
 on:
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      HEROKU_API_KEY:
+        required: true
+      HEROKU_APP_NAME:
+        required: true
+      HEROKU_EMAIL:
+        required: true
 
 jobs:
   build:
