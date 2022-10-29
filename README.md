@@ -63,11 +63,3 @@ Open API shemas for swagger and redoc are avaiable at:
 `run.py` manages full docker and frontend builds.
 
 For info run `./run.py ?` or check the script.
-
-## Current state
-
-This is still work in progress main missing parts are:
-
-- [ ] Integrate django webpackloader
-- [ ] Example async view and example consumer
-- [ ] seperated repo for example production build
