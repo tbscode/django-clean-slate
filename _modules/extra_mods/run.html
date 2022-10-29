@@ -180,6 +180,11 @@
     <span class="n">file_spinix</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;Dockerfile.docs&quot;</span><span class="p">]</span>
     <span class="n">tag_spinix</span> <span class="o">=</span> <span class="s2">&quot;docs.spinix&quot;</span>
 
+    <span class="c1"># Staging server</span>
+    <span class="n">file_staging</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;Dockerfile.stage&quot;</span><span class="p">]</span>
+    <span class="n">staging_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">TAG</span><span class="si">}</span><span class="s2">.stage&quot;</span>
+    <span class="n">stage_env</span> <span class="o">=</span> <span class="s2">&quot;./env_stage&quot;</span>
+
 
 <span class="n">subprocess_capture_out</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;capture_output&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -208,6 +213,15 @@
 
 
 <span class="k">def</span> <span class="nf">_parser</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Commandline args:</span>
+<span class="sd">    most notably &#39;actions&#39;</span>
+<span class="sd">        the default ( -&gt; `./run.py` ) is configured for development to run the following steps</span>
+<span class="sd">        1. Build docker image ( required for all the following steps)</span>
+<span class="sd">        2. static extraction</span>
+<span class="sd">        3. mirations for the db</span>
+<span class="sd">        4. running the container interactively ( close with ctl-C )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="s1">&#39;--btype&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;prod, dev, any&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-bg&#39;</span><span class="p">,</span> <span class="s1">&#39;--background&#39;</span><span class="p">,</span>
@@ -215,9 +229,9 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Ouput file or path required by some actions&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="s1">&#39;--input&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input file required by some actions&quot;</span><span class="p">)</span>
+        <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="s1">&#39;--input&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input file (or data) required by some actions&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;actions&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[</span>
-                        <span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="s2">&quot;migrate&quot;</span><span class="p">,</span> <span class="s2">&quot;run&quot;</span><span class="p">],</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;action&#39;</span><span class="p">)</span>
+                        <span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;migrate&quot;</span><span class="p">,</span> <span class="s2">&quot;run&quot;</span><span class="p">],</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;action&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;--cmd&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Passing command input&#39;</span><span class="p">)</span>
 
@@ -234,10 +248,6 @@
     <span class="k">return</span> <span class="n">_parser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">extract_static</span><span class="p">():</span>
-    <span class="k">pass</span>
-
-
 <span class="k">def</span> <span class="nf">_is_dev</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
     <span class="k">return</span> <span class="s2">&quot;dev&quot;</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">btype</span>
 
@@ -249,6 +259,20 @@
     <span class="n">out</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">subprocess_capture_out</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
     <span class="n">ps</span> <span class="o">=</span> <span class="p">[</span><span class="nb">eval</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ps</span> <span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;Image&quot;</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">_docker_images</span><span class="p">(</span><span class="n">repo</span><span class="o">=</span><span class="n">TAG</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Runins a list of docke images filtered by &#39;repo&#39; &quot;&quot;&quot;</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;docker&quot;</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">,</span> <span class="s2">&quot;--format&quot;</span><span class="p">,</span> <span class="s1">&#39;&quot;{{json . }}&quot;&#39;</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">subprocess_capture_out</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="nb">eval</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="n">_filtered_images</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+        <span class="n">repo_cond</span> <span class="o">=</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;Repository&#39;</span><span class="p">]</span>
+        <span class="n">tag_cond</span> <span class="o">=</span> <span class="n">tag</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;Tag&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">repo_cond</span><span class="p">,</span> <span class="n">tag_cond</span><span class="p">]):</span>
+            <span class="n">_filtered_images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_filtered_images</span>
 
 
 <div class="viewcode-block" id="kill"><a class="viewcode-back" href="../../apidoc/extra_mods.run.html#extra_mods.run.kill">[docs]</a><span class="nd">@register_action</span><span class="p">(</span><span class="n">cont</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">])</span>
@@ -344,6 +368,56 @@
     <span class="n">kill</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
+<span class="k">def</span> <span class="nf">_build_file_tag</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">dbuild</span><span class="p">,</span> <span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_cmd</span><span class="p">))</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="deploy_staging"><a class="viewcode-back" href="../../apidoc/extra_mods.run.html#extra_mods.run.deploy_staging">[docs]</a><span class="nd">@register_action</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;stage&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">deploy_staging</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build and push the dockerfile for the staging server</span>
+<span class="sd">    This acction requires some config params passed via -i</span>
+<span class="sd">    e.g.: -i &quot;{&#39;HEROKU_REGISTRY_URL&#39;:&#39;...&#39;,&#39;HEROKU_APP_NAME&#39;:&#39;...&#39;}&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="s2">&quot; &#39;-i&#39; required, e.g.: </span><span class="se">\&quot;</span><span class="s2">{&#39;HEROKU_REGISTRY_URL&#39;:&#39;...&#39;,&#39;HEROKU_APP_NAME&#39;:&#39;...&#39;}</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+    <span class="n">heroku_env</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;HEROKU_REGISTRY_URL&#39;</span> <span class="ow">in</span> <span class="n">heroku_env</span><span class="p">:</span>  <span class="c1"># The registry url can componly be infered from the app name</span>
+        <span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_REGISTRY_URL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;registry.heroku.com/</span><span class="si">{</span><span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_APP_NAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/web&quot;</span>
+    <span class="c1"># Build Dockerfile.stage</span>
+    <span class="n">_build_file_tag</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">file_staging</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">.</span><span class="n">staging_tag</span><span class="p">)</span>
+    <span class="c1"># Collect the statics ( also contains the files for open api specifications )</span>
+    <span class="n">_run_tag_env</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">staging_tag</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">stage_env</span><span class="p">)</span>
+    <span class="c1"># We need to check if heroku config vars need updating</span>
+    <span class="n">env_statge</span> <span class="o">=</span> <span class="n">_env_as_dict</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">stage_env</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">env_statge</span><span class="p">:</span>
+        <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;heroku&quot;</span><span class="p">,</span> <span class="s2">&quot;config:get&quot;</span><span class="p">,</span>
+                <span class="n">k</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;--app=</span><span class="si">{</span><span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_APP_NAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">_cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">subprocess_capture_out</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="n">env_statge</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> (&#39;</span><span class="si">{</span><span class="n">env_statge</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;) didn&#39;t change progressing&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Change detected: &#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">&#39; vs &#39;</span><span class="si">{</span><span class="n">env_statge</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;updating heroku config var: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">env_statge</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;heroku&quot;</span><span class="p">,</span> <span class="s2">&quot;config:set&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">env_statge</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;--app=</span><span class="si">{</span><span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_APP_NAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span>
+    <span class="c1"># Tag the image with the heroku repo, and push it:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">_docker_images</span><span class="p">(</span><span class="n">repo</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">staging_tag</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> \
+        <span class="sa">f</span><span class="s2">&quot;Multiple or no &#39;latest&#39; image for name </span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">staging_tag</span><span class="si">}</span><span class="s2"> found&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;docker&quot;</span><span class="p">,</span> <span class="s2">&quot;tag&quot;</span><span class="p">,</span> <span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;ID&quot;</span><span class="p">],</span> <span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_REGISTRY_URL&#39;</span><span class="p">]]</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;docker&quot;</span><span class="p">,</span> <span class="s2">&quot;push&quot;</span><span class="p">,</span> <span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_REGISTRY_URL&#39;</span><span class="p">]]</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;heroku&quot;</span><span class="p">,</span> <span class="s2">&quot;container:release&quot;</span><span class="p">,</span> <span class="s2">&quot;web&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--app=</span><span class="si">{</span><span class="n">heroku_env</span><span class="p">[</span><span class="s1">&#39;HEROKU_APP_NAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="build"><a class="viewcode-back" href="../../apidoc/extra_mods.run.html#extra_mods.run.build">[docs]</a><span class="nd">@register_action</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="n">cont</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -352,9 +426,19 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">dbuild</span><span class="p">,</span> <span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">dtag</span> <span class="k">if</span> <span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">ptag</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_cmd</span><span class="p">))</span>
-    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span></div>
+    <span class="n">_build_file_tag</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">file</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">.</span><span class="n">dtag</span> <span class="k">if</span> <span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">ptag</span><span class="p">)</span></div>
+
+
+<span class="nd">@register_action</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;collectstatic&quot;</span><span class="p">],</span> <span class="n">cont</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">extract_static</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="c1"># TODO: here and in the migrate command the &#39;_run&#39; and &#39;kill&#39; should be conditional,</span>
+    <span class="c1"># they should only be used when this is run as a &#39;singular&#39; command!</span>
+    <span class="c1"># Otherwise this causes unnecessary app restarts</span>
+    <span class="n">_run</span><span class="p">(</span><span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># &#39;--noinput&#39; why ask for overwrite permission we are in container anyways</span>
+    <span class="n">_run_in_running</span><span class="p">(</span><span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;python3&quot;</span><span class="p">,</span> <span class="s2">&quot;manage.py&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;collectstatic&quot;</span><span class="p">,</span> <span class="s2">&quot;--noinput&quot;</span><span class="p">])</span>
+    <span class="n">kill</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_make_webpack_command</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">watch</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
@@ -450,11 +534,13 @@
     <span class="k">return</span> <span class="n">_run</span><span class="p">(</span><span class="n">dev</span><span class="o">=</span><span class="n">_is_dev</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">background</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">background</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="n">dev</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">drun</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">denv</span> <span class="k">if</span> <span class="n">dev</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">penv</span><span class="p">),</span> <span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">vmount</span><span class="p">,</span>
-            <span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span> <span class="k">if</span> <span class="n">background</span> <span class="k">else</span> <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">dtag</span> <span class="k">if</span> <span class="n">dev</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">ptag</span><span class="p">]</span>
+<span class="k">def</span> <span class="nf">_run_tag_env</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">mounts</span><span class="o">=</span><span class="p">[],</span> <span class="n">background</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Some variations on `docker run` for interactive / passive container control</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">drun</span><span class="p">,</span> <span class="s2">&quot;--env-file&quot;</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="o">*</span><span class="n">mounts</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span> <span class="k">if</span> <span class="n">background</span> <span class="k">else</span> <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="n">tag</span><span class="p">]</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_cmd</span><span class="p">))</span>
-
     <span class="k">if</span> <span class="n">background</span><span class="p">:</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -463,6 +549,13 @@
             <span class="n">kill</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_cmd</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="n">dev</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">_cmd</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">drun</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">denv</span> <span class="k">if</span> <span class="n">dev</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">penv</span><span class="p">),</span> <span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">vmount</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span> <span class="k">if</span> <span class="n">background</span> <span class="k">else</span> <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">dtag</span> <span class="k">if</span> <span class="n">dev</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">ptag</span><span class="p">]</span>
+    <span class="n">_run_tag_env</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">dtag</span> <span class="k">if</span> <span class="n">dev</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">ptag</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="p">(</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">denv</span> <span class="k">if</span> <span class="n">dev</span> <span class="k">else</span> <span class="n">c</span><span class="o">.</span><span class="n">penv</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mounts</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">vmount</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="manage_command"><a class="viewcode-back" href="../../apidoc/extra_mods.run.html#extra_mods.run.manage_command">[docs]</a><span class="nd">@register_action</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ma&quot;</span><span class="p">,</span> <span class="s2">&quot;manage&quot;</span><span class="p">,</span> <span class="s2">&quot;manage.py&quot;</span><span class="p">])</span>
@@ -486,7 +579,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_cmd</span><span class="p">))</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_cmd</span><span class="p">)</span>
     <span class="n">_run_in_running_tag</span><span class="p">([</span><span class="s2">&quot;make&quot;</span><span class="p">,</span> <span class="s2">&quot;html&quot;</span><span class="p">],</span> <span class="n">tag</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">tag_spinix</span><span class="p">,</span> <span class="n">work_dir</span><span class="o">=</span><span class="s2">&quot;/docs&quot;</span><span class="p">)</span>
-    <span class="c1">#_run_in_running_tag([&quot;sh&quot;], tag=c.tag_spinix)</span>
+    <span class="c1"># _run_in_running_tag([&quot;sh&quot;], tag=c.tag_spinix)</span>
     <span class="n">_kill_tag</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">tag_spinix</span><span class="p">)</span>
     <span class="c1"># copy the output files</span>
     <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="s2">&quot;./_docs/build/html&quot;</span><span class="p">,</span> <span class="s2">&quot;./docs&quot;</span><span class="p">)</span></div>
