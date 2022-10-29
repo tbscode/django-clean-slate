@@ -10,3 +10,4 @@ jobs:
       - name: deploy staging
         if: contains(github.event.comment.body, '/stage')
         uses: ./.github/workflows/stage.yaml
+      - run: echo ${{ github.event.changes.body.from }}

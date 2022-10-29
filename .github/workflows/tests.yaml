@@ -18,7 +18,7 @@ concurrency:
 jobs:
   make_docs:
     runs-on: ubuntu-latest
-    name: Build, checkut gh actions
+    name: Build & Run tests
     steps:
       - uses: actions/checkout@master
       - name: Build Image
