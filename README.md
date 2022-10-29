@@ -55,8 +55,8 @@ e.g.: see full documentation of `./run.py` [here](https://tbscode.github.io/djan
 Using `https://github.com/tfranzel/drf-spectacular` to generate open api schemas from DRF.
 Open API shemas for swagger and redoc are avaiable at:
 
-- [`/api/schema/swagger-ui/`](https://django-clean-slate-staging.herokuapp.com/)
-- [`/api/schema/redoc/`](https://django-clean-slate-staging.herokuapp.com/)
+- [`/api/schema/swagger-ui/`](https://django-clean-slate-staging.herokuapp.com/api/schema/swagger-ui/)
+- [`/api/schema/redoc/`](https://django-clean-slate-staging.herokuapp.com/api/schema/redoc/)
 
 ## Tools
 
