@@ -72,6 +72,15 @@ def register_action(**kwargs):
 
 
 def _parser():
+    """
+    Commandline args:
+    most notably 'actions'
+        the default ( -> `./run.py` ) is configured for development to run the following steps
+        1. Build docker image ( required for all the following steps)
+        2. static extraction
+        3. mirations for the db
+        4. running the container interactively ( close with ctl-C )
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--btype', default="dev", help="prod, dev, any")
     parser.add_argument('-bg', '--background',
@@ -81,7 +90,7 @@ def _parser():
     parser.add_argument(
         '-i', '--input', help="Input file (or data) required by some actions")
     parser.add_argument('actions', metavar='A', type=str, default=[
-                        "build", "migrate", "run"], nargs='?', help='action')
+                        "build", "static", "migrate", "run"], nargs='?', help='action')
     parser.add_argument('-c', '--cmd', nargs='+',
                         help='Passing command input')
 
@@ -96,10 +105,6 @@ def _env_as_dict(path: str) -> dict:
 
 def args():
     return _parser().parse_args()
-
-
-def extract_static():
-    pass
 
 
 def _is_dev(a):
@@ -232,7 +237,7 @@ def _build_file_tag(file, tag):
 def deploy_staging(args):
     """
     Build and push the dockerfile for the staging server
-    This acction requires some config params passed via -i 
+    This acction requires some config params passed via -i
     e.g.: -i "{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}"
     """
     assert args.input, " '-i' required, e.g.: \"{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}\""
@@ -241,6 +246,8 @@ def deploy_staging(args):
         heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
     # Build Dockerfile.stage
     _build_file_tag(c.file_staging[1], c.staging_tag)
+    # Collect the statics ( also contains the files for open api specifications )
+    _run_tag_env(tag=c.staging_tag, env=c.stage_env)
     # We need to check if heroku config vars need updating
     env_statge = _env_as_dict(c.stage_env)
     for k in env_statge:
@@ -279,6 +286,18 @@ def build(args):
     if not _is_dev(args):
         raise NotImplementedError
     _build_file_tag(c.file[1], c.dtag if _is_dev(args) else c.ptag)
+
+
+@register_action(alias=["static", "collectstatic"], cont=True)
+def extract_static(args):
+    # TODO: here and in the migrate command the '_run' and 'kill' should be conditional,
+    # they should only be used when this is run as a 'singular' command!
+    # Otherwise this causes unnecessary app restarts
+    _run(_is_dev(args), background=True)
+    # '--noinput' why ask for overwrite permission we are in container anyways
+    _run_in_running(_is_dev(args), ["python3", "manage.py",
+                    "collectstatic", "--noinput"])
+    kill(args, front=False)
 
 
 def _make_webpack_command(env, config, debug: bool, watch: bool):
@@ -374,11 +393,13 @@ def run(args):
     return _run(dev=_is_dev(args), background=args.background)
 
 
-def _run(dev=True, background=False):
-    _cmd = [*c.drun, *(c.denv if dev else c.penv), *c.vmount,
-            *c.port, "-d" if background else "-t", c.dtag if dev else c.ptag]
+def _run_tag_env(tag, env, mounts=[], background=False):
+    """
+    Some variations on `docker run` for interactive / passive container control
+    """
+    _cmd = [*c.drun, "--env-file", env, *mounts,
+            *c.port, "-d" if background else "-t", tag]
     print(" ".join(_cmd))
-
     if background:
         subprocess.run(_cmd)
     else:
@@ -387,6 +408,13 @@ def _run(dev=True, background=False):
             kill(None, front=False)
         signal.signal(signal.SIGINT, handler)
         p = subprocess.call(" ".join(_cmd), shell=True, stdin=subprocess.PIPE)
+
+
+def _run(dev=True, background=False):
+    _cmd = [*c.drun, *(c.denv if dev else c.penv), *c.vmount,
+            *c.port, "-d" if background else "-t", c.dtag if dev else c.ptag]
+    _run_tag_env(tag=c.dtag if dev else c.ptag, env=(
+        c.denv if dev else c.penv)[1], mounts=c.vmount, background=background)
 
 
 @register_action(alias=["ma", "manage", "manage.py"])
@@ -410,7 +438,7 @@ def build_docs(args):
     print(" ".join(_cmd))
     subprocess.run(_cmd)
     _run_in_running_tag(["make", "html"], tag=c.tag_spinix, work_dir="/docs")
-    #_run_in_running_tag(["sh"], tag=c.tag_spinix)
+    # _run_in_running_tag(["sh"], tag=c.tag_spinix)
     _kill_tag(c.tag_spinix)
     # copy the output files
     shutil.copytree("./_docs/build/html", "./docs")

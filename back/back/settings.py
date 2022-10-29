@@ -1,5 +1,9 @@
 import os
 
+# This can be used to exclude apps or middleware
+BUILD_TYPE = os.environ["BUILD_TYPE"]
+assert BUILD_TYPE in ['deployment', 'staging', 'development']
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ['DJ_SECRET_KEY']
 DEBUG = os.environ["DJ_DEBUG"].lower() in ('true', '1', 't')
@@ -13,6 +17,10 @@ management: for user management and general api usage
 INSTALLED_APPS = [
     'management',
     'rest_framework',
+    *([  # API docs not required in deployment
+        'drf_spectacular',  # for api shema generation
+        'drf_spectacular_sidecar'  # statics for redoc and swagger
+    ] if BUILD_TYPE in ['staging', 'development'] else []),
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -20,9 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+print(f'Installed apps:\n' + '\n- '.join(INSTALLED_APPS))
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    *([  # Whitenoise to server static only needed in staging or development
+        'whitenoise.middleware.WhiteNoiseMiddleware',
+    ] if BUILD_TYPE in ['staging', 'development'] else []),
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -49,12 +61,38 @@ TEMPLATES = [
     },
 ]
 
+STATIC_URL = 'static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+STATICFILES_DIRS = [
+    # TODO: add static filed from other apps?
+]
+
+
+WSGI_APPLICATION = "back.wsgi.application"
 ASGI_APPLICATION = "back.asgi.application"
 
 CELERY_TIMEZONE = os.environ['DJ_CELERY_TIMEZONE']
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
+if BUILD_TYPE in ['staging', 'development']:
+
+    REST_FRAMEWORK = {
+        'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    }
+
+    SPECTACULAR_SETTINGS = {
+        'TITLE': 'API DOC django clean clate',
+        'DESCRIPTION': 'Django Clean Slate by tbscode',
+        'VERSION': '1.0.0',
+        'SERVE_INCLUDE_SCHEMA': False,
+        # The following are for using
+        'SWAGGER_UI_DIST': 'SIDECAR',
+        'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+        'REDOC_DIST': 'SIDECAR',
+    }
 
 """
 Development database is simply sq-lite, 

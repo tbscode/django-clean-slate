@@ -3,3 +3,6 @@ channels==4.0.0
 celery==5.2.7
 djangorestframework==3.14.0
 uvicorn[standard]
+# [sidecar] only used to not need static files from CDN
+drf-spectacular[sidecar] # TODO: maybe this should only be used for api building
+whitenoise # Serving static files in development

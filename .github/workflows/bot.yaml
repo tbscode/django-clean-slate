@@ -1,0 +1,13 @@
+name: pull request bot action trigger
+on:
+  issue_comment:
+    types: [created, edited, deleted]
+jobs:
+  pull_request_actions:
+    if: ${{ github.event.issue.pull_request }} # Check only pull request for now
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: say hello
+        if: contains(github.event.comment.body, '/stage')
+        run: |
+          echo will be used to trigger staging in the future!
