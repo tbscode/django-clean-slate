@@ -19,13 +19,13 @@ class Throttle200TimesPerDay(UserRateThrottle):
     rate = '200/day'
 
 
-@permission_classes([IsAuthenticated])
 @throttle_classes([Throttle200TimesPerDay])
-@api_view(['GET'])
 @vary_on_headers("Authorization",)
 # TODO: invalidate chache whenever user state changes e.g.: new match
 @cache_page(60*60*2)
 # Waithin on 'async' support for DRF: https://github.com/encode/django-rest-framework/discussions/7774
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def user_app_data(request):
     """
     Returns the main application data for a given user.
