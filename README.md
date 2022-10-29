@@ -37,7 +37,7 @@ The 'staging' version is currently deployed at: https://django-clean-slate-stagi
 The **production** application is suppsed to be deployed with Kubernetes `k8s.io` ( configurations are **not included** in this repo ).
 For production I recommend a pooled postgressql database, a redis memory store (for websocket support), a s3 storage bucked for serving static files and a load balanced k8 node pool. This configuration allowes full horizontal - on demand - scaling.
 
-This repo offers a **staging** deployment! For staging we can easily use [`white-noise`](http://whitenoise.evans.io/en/stable/) to serve static files, a simple in-container redis instance and a simple in-container sqllite database. This can be auto deployed on a free-tier Heroku instance - or similar - using the `Dockerfile.stage` in combination with a github workflow.
+This repo offers a **staging** deployment! For staging we can easily use [`white-noise`](http://whitenoise.evans.io/en/stable/) to serve static files, a simple in-container redis instance and a simple in-container sqllite database. This can be auto deployed on a free-tier Heroku instance - or similar - using the `Dockerfile.stage` in combination with a github [workflow](https://github.com/tbscode/django-clean-slate/actions/workflows/stage.yaml).
 
 This even offers the flexibility of seperate staging for seperate developers simply by opening mulitple Heroku accounts.
 
@@ -45,14 +45,14 @@ This even offers the flexibility of seperate staging for seperate developers sim
 
 ## Documentation
 
-Are automaticly generated using `sphinx` and published to [Git Hub Pages](https://tbscode.github.io/django-clean-slate).
-Docs can be generated localy using `./run.py docs` or automaticly using a github workflow.
+Are automaticly generated using `sphinx` and published to [`gh-pages`](https://tbscode.github.io/django-clean-slate).
+Docs can be generated localy using `./run.py docs` or automaticly using a github [workflow](https://github.com/tbscode/django-clean-slate/actions/workflows/docs.yaml).
 
-e.g.: see full documentation of `./run.py` [here](https://tbscode.github.io/django-clean-slate/apidoc/extra_mods.run.html#module-extra_mods.run).
+e.g.: see full documentation of [`./run.py`](https://tbscode.github.io/django-clean-slate/apidoc/extra_mods.run.html#module-extra_mods.run).
 
 ### API documentation
 
-Using `https://github.com/tfranzel/drf-spectacular` to generate open api schemas from DRF.
+Using [`drf-spectacular`](https://github.com/tfranzel/drf-spectacular) to generate open api schemas from DRF.
 Open API shemas for swagger and redoc are avaiable at:
 
 - [`/api/schema/swagger-ui/`](https://django-clean-slate-staging.herokuapp.com/api/schema/swagger-ui/)
