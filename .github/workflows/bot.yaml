@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: deploy staging
         if: contains(github.event.comment.body, '/stage')
-        uses: ./.github/workflows/stage.yaml
+        uses: tbscode/django-clean-slate/workflows/stage.yaml
       - run: echo ${{ github.event.changes.body.from }}
   pull_request_action_02:
     if: ${{ github.event.issue.pull_request }} # Check only pull request for now
