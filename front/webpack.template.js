@@ -2,12 +2,15 @@ const path = require('path');
 const webpack = require('webpack');
 const BundleTracker = require('webpack-bundle-tracker');
 const CompressionPlugin = require('compression-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+
 var config = function (env) {
-  var publicPath = '/static/dist/$frontendName';
+  var publicPath = '/static/dist/example_app/';
   var devTool = env.DEV_TOOL;
   // It is always assumed that the backend is mounted at /back
-  var outputPath = '../back/static/dist/$frontendName';
-  var entryPoint = './apps/$frontendName/src/index.js';
+  var outputPath = '../back/static/dist/example_app';
+  var entry = './apps/example_app';
+  var entryPoint = `${entry}/src/index.js`;
   var debug = env.DEBUG === '1';
 
   return {
@@ -35,6 +38,14 @@ var config = function (env) {
         ),
       }),
       new CompressionPlugin(),
+      new CopyPlugin({
+        patterns: [
+          {
+            from: path.resolve(__dirname, `${entry}/public`),
+            to: path.join(__dirname, outputPath),
+          },
+        ],
+      }),
     ],
     devtool: devTool,
     module: {
@@ -68,7 +79,7 @@ var config = function (env) {
           ],
         },
         {
-          test: /\.(ttf)$/,
+          test: /\.(png|jpg|gif|ttf)$/,
           use: {
             loader: 'file-loader',
             options: {
@@ -79,10 +90,6 @@ var config = function (env) {
         {
           test: /\.css$/,
           use: ['style-loader', 'css-loader'],
-        },
-        {
-          test: /\.(png|jpg|gif)$/,
-          use: ['file-loader'],
         },
       ],
     },
