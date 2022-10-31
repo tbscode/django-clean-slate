@@ -1,6 +1,7 @@
 {% load render_bundle from webpack_loader %}
 <!DOCTYPE html>
 <head>
+    {% include "react_app_head_base.html" with app_name='example_app' title='Clean Slate' %}    
 </head>
 
 {% render_bundle 'staticfiles' 'css' 'example_app' %}
