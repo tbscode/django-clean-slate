@@ -8,6 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ['DJ_SECRET_KEY']
 DEBUG = os.environ["DJ_DEBUG"].lower() in ('true', '1', 't')
 ALLOWED_HOSTS = os.environ.get("DJ_ALLOWED_HOSTS", "").split(",")
+FRONTENDS = os.environ["FR_FRONTENDS"].split(",")
 
 """
 Own applications:
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
         'drf_spectacular',  # for api shema generation
         'drf_spectacular_sidecar'  # statics for redoc and swagger
     ] if BUILD_TYPE in ['staging', 'development'] else []),
+    'webpack_loader',  # Load bundled webpack files, check `./run.py front`
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -118,6 +120,18 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME': val} for val in [
     'django.contrib.auth.password_validation.NumericPasswordValidator',
 ]]
 
+"""
+For loading webpack static files
+- in development this assumes the frontend folder is mounted at `/front` (inside the container)
+- in production we instead copy the `./front` files to `/front`
+"""
+WEBPACK_LOADER = {app: {  # Configure seperate loaders for every app!
+    'CACHE': not DEBUG,
+    'STATS_FILE': f"/front/{app}.webpack-stats.json",
+    'BUNDLE_DIR_NAME': f"/front/dist/{app}",  # TODO: is this required?
+    'POLL_INTERVAL': 0.1,
+    'IGNORE': [r'.+\.hot-update.js', r'.+\.map'],
+} for app in FRONTENDS}
 
 LANGUAGE_CODE = os.environ.get('DJ_LANGUAGE_CODE', 'en-us')
 TIME_ZONE = os.environ.get('DJ_TIME_ZONE', 'UTC')
@@ -129,5 +143,5 @@ STATIC_URL = '/static/'
 
 if DEBUG:
     info = '\n '.join([f'{n}: {globals()[n]}' for n in [
-        'BASE_DIR', 'SECRET_KEY', 'ALLOWED_HOSTS', 'CELERY_TIMEZONE']])
+        'BASE_DIR', 'SECRET_KEY', 'ALLOWED_HOSTS', 'CELERY_TIMEZONE', 'FRONTENDS']])
     print(f"configured django settings:\n {info}")

@@ -41,9 +41,9 @@ author = 'Tim Schupp'
 # ones.
 
 # You can only build these docks from inside the container!
-sys.path.insert(0, os.path.abspath('/app/backend'))
-sys.path.insert(0, os.path.abspath('/app/extra_mods'))
-sys.path.insert(0, os.path.abspath('/app'))
+sys.path.insert(0, os.path.abspath('/docs/backend'))
+sys.path.insert(0, os.path.abspath('/docs/extra_mods'))
+sys.path.insert(0, os.path.abspath('/docs'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'back.settings'
 django.setup()
 
@@ -99,9 +99,9 @@ html_theme_options = {
 autodoc_member_order = 'bysource'
 autodoc_inherit_docstrings = False
 
-apidoc_module_dir = '/app'
+apidoc_module_dir = '/docs'
 apidoc_output_dir = 'apidoc'
-apidoc_excluded_paths = ['/app/migrations']
+apidoc_excluded_paths = ['/docs/migrations']
 apidoc_separate_modules = True
 apidoc_toc_file = False
 apidoc_module_first = True

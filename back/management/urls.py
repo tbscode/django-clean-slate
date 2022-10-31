@@ -1,4 +1,4 @@
-from . import api
+from . import api, views
 from django.urls import path
 from django.conf import settings
 if settings.BUILD_TYPE in ['development', 'staging']:
@@ -9,6 +9,7 @@ VERSION = 1
 urlpatterns = [
     path(f"api/v{VERSION}/user_data/", api.user_app_data),
     path(f"api/v{VERSION}/register/", api.register),
+    path(f"app/", views.example_frontend),
     *([
         path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
         path('api/schema/swagger-ui/',

@@ -22,7 +22,9 @@ class c:
     dtag = f"{TAG}.dev"
     ptag = f"{TAG}.prod"
     port = ["-p", f"{PORT}:8000"]
-    vmount = ["-v", f"{os.getcwd()}/back:/app"]
+    vmount = [
+        "-v", f"{os.getcwd()}/back:/back",
+        "-v", f"{os.getcwd()}/front:/front"]
     denv = ["--env-file", "./env"]
     penv = ["--env-file", "./penv"]
     shell = "/bin/bash"
@@ -30,12 +32,16 @@ class c:
 
     # Frontend container stuff
     front_docker_file = ["-f", "Dockerfile.front"]
-    vmount_front = ["-v", f"{os.getcwd()}/front:/app"]
+    vmount_front = [
+        "-v", f"{os.getcwd()}/front:/front",
+        # We mount also the backend, so static files can be copied over
+        "-v", f"{os.getcwd()}/back:/back"
+    ]
     front_tag = f"{FRONT_TAG}.dev"
 
     # For making the spinix docs
     vmount_spinix = ["-v", f"{os.getcwd()}/_docs:/docs",
-                     "-v", f"{os.getcwd()}/back:/app/backend"]
+                     "-v", f"{os.getcwd()}/back:/docs/backend"]
     file_spinix = ["-f", "Dockerfile.docs"]
     tag_spinix = "docs.spinix"
 
@@ -340,7 +346,7 @@ def build_front(args):
         f'`npm i` for frontends: {frontends} \nAdd frontends under `FR_FRONTENDS` in env, place them in front/apps/')
     for front in frontends:
         _run_in_running(
-            _is_dev(args), ["npm", "i"], work_dir=f"/app/apps/{front}", backend=False)  # 4
+            _is_dev(args), ["npm", "i"], work_dir=f"/front/apps/{front}", backend=False)  # 4
     # Frontend builds can only be performed with the webpack configs present
     with open('./front/webpack.template.js', 'r') as f:
         webpack_template = f.read()

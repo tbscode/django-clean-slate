@@ -1,3 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
+
+def example_frontend(request):
+    return render(request, "404.html", {})
