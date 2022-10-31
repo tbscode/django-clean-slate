@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all the backend files
 # this assumes all the frontends are build and the static files have already been moved to ./back/static
 ADD back /back/
+ADD front /front/
 
 #EXPOSE 8000
 

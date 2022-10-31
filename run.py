@@ -252,6 +252,8 @@ def deploy_staging(args):
         heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
     # Build Dockerfile.stage
     _build_file_tag(c.file_staging[1], c.staging_tag)
+    # Build the frontends
+    build_front(args)  # TODO: invoke a little more safely
     # Collect the statics ( also contains the files for open api specifications )
     _run_tag_env(tag=c.staging_tag, env=c.stage_env)
     # We need to check if heroku config vars need updating
