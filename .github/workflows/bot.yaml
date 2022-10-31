@@ -17,5 +17,5 @@ jobs:
     steps:
       - name: deploy staging
         if: contains(github.event.comment.body, '/docs')
-        uses: ./.github/workflows/docs.yaml
+        uses: tbscode/django-clean-slate/workflows/docs.yaml
       - run: echo ${{ github.event.changes.body.from }}

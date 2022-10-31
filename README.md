@@ -63,3 +63,10 @@ Open API shemas for swagger and redoc are avaiable at:
 `run.py` manages full docker and frontend builds.
 
 For info run `./run.py ?` or check the script.
+
+## Known issues
+
+- [ ] Permissions for inconter created files, outputed at volume mount are docker group
+
+> There sadly is still not right way to manage volume permissions in docker: https://github.com/moby/moby/issues/7198,
+> Though we can fix this by adding the system user group inside of the container and using that for creating all the files

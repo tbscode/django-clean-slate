@@ -1,7 +1,7 @@
 FROM python:3.8
 # Need python <= 3.8: https://github.com/readthedocs/readthedocs.org/issues/9031
 
-WORKDIR /app
+WORKDIR /docs
 
 COPY /back/requirements.txt ./
 COPY /_docs/requirements.txt ./requirements_docs.txt

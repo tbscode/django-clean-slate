@@ -6,3 +6,4 @@ uvicorn[standard]
 # [sidecar] only used to not need static files from CDN
 drf-spectacular[sidecar] # TODO: maybe this should only be used for api building
 whitenoise # Serving static files in development
+django-webpack-loader # Load the static file bundles
