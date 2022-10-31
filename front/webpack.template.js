@@ -3,9 +3,10 @@ const webpack = require('webpack');
 const BundleTracker = require('webpack-bundle-tracker');
 const CompressionPlugin = require('compression-webpack-plugin');
 var config = function (env) {
-  var publicPath = '/static/$frontendName/dist/';
+  var publicPath = '/static/dist/$frontendName';
   var devTool = env.DEV_TOOL;
-  var outputPath = './dist/$frontendName';
+  // It is always assumed that the backend is mounted at /back
+  var outputPath = '../back/static/dist/$frontendName';
   var entryPoint = './apps/$frontendName/src/index.js';
   var debug = env.DEBUG === '1';
 
