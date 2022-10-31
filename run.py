@@ -255,7 +255,7 @@ def deploy_staging(args):
     # Build the frontends
     build_front(args)  # TODO: invoke a little more safely
     # Collect the statics ( also contains the files for open api specifications )
-    _run_tag_env(tag=c.staging_tag, env=c.stage_env)
+    extract_static(args)
     # We need to check if heroku config vars need updating
     env_statge = _env_as_dict(c.stage_env)
     for k in env_statge:
