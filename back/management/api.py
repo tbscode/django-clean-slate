@@ -1,9 +1,15 @@
+from ast import operator
 import django.contrib.auth.password_validation as pw_validation
+# TODO: only allowed on development
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 from datetime import datetime
 from django.conf import settings
 from django.core import exceptions
 from django.utils.module_loading import import_string
 from rest_framework.decorators import api_view, schema, throttle_classes, permission_classes
+from rest_framework import authentication, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -19,29 +25,27 @@ class Throttle200TimesPerDay(UserRateThrottle):
     rate = '200/day'
 
 
-@throttle_classes([Throttle200TimesPerDay])
-@vary_on_headers("Authorization",)
-# TODO: invalidate chache whenever user state changes e.g.: new match
-@cache_page(60*60*2)
-# Waithin on 'async' support for DRF: https://github.com/encode/django-rest-framework/discussions/7774
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_app_data(request):
+class user_app_data(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAdminUser]
     """
     Returns the main application data for a given user.
     Basicly this is the data the main frontend app receives
     """
-    return Response({
-        "self": {
-            "info": "self info",
-            "profile": "profile",
-            "state": "state"
-        },
-        "matches": [{
-            "info": "some info placeholder",
-            "profile": "some profile placeholder"
-        }],
-    })
+    # Waithin on 'async' support for DRF: https://github.com/encode/django-rest-framework/discussions/7774
+
+    def get(self, request, format=None):
+        return Response({
+            "self": {
+                "info": "self info",
+                "profile": "profile",
+                "state": "state"
+            },
+            "matches": [{
+                "info": "some info placeholder",
+                "profile": "some profile placeholder"
+            }],
+        })
 
 
 class RegistrationData:
@@ -84,28 +88,52 @@ class RegistrationSerializer(serializers.Serializer):
         return super(RegistrationSerializer, self).validate(data)
 
 
-@api_view(['POST'])
-def register(request):
+class register(APIView):
     """
-    Register any user
-    e.g.:
-    curl --data "first_name=tim&second_name=schupp&email=test@gmail.com&password1=was&password2=was" http://localhost:8000/api/v1/register/
+    Register a user by post request
     """
-    serializer = RegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        # Perform registration, send email etc...
-        # The types are secure, we checked that using the 'Registration Serializer'
-        registration_data = serializer.save()
-        user_data_serializer = UserSerializer(
-            # Currently we don't allow any specific username
-            username=registration_data.email,
-            email=registration_data.email,
-            first_name=registration_data.first_name,
-            second_name=registration_data.second_name,
-            password=registration_data.password
-        )
-        if user_data_serializer.is_valid():
-            get_user_model().objects.create(**user_data_serializer.data)
-        return Response("Sucessfully Created User")
-    else:
-        return Response(serializer.errors)
+    authentication_classes = [authentication.BasicAuthentication]
+    permission_classes = []
+
+    @extend_schema(
+        # extra parameters added to the schema
+        parameters=[
+            OpenApiParameter(
+                name=param, description=f'User Profile input {param} for Registration', required=True, type=str)
+            for param in ['email', 'first_name', 'second_name', 'password1', 'password2']
+        ],
+        # override default docstring extraction
+        description='More descriptive text',
+        # provide Authentication class that deviates from the views default
+        auth=None,
+        # change the auto-generated operation name
+        operation_id=None,
+        # or even completely override what AutoSchema would generate. Provide raw Open API spec as Dict.
+        #operation={"operationId": "post"},
+        operation=None,
+        methods=["POST"]
+    )
+    @extend_schema(request=RegistrationSerializer(many=False))
+    def post(self, request):
+        serializer = RegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            # Perform registration, send email etc...
+            # The types are secure, we checked that using the 'Registration Serializer'
+            registration_data = serializer.save()
+            user_data_serializer = UserSerializer(data=dict(
+                # Currently we don't allow any specific username
+                username=registration_data.email,
+                email=registration_data.email,
+                first_name=registration_data.first_name,
+                second_name=registration_data.second_name,
+                password=registration_data.password
+            ))  # type: ignore
+            if user_data_serializer.is_valid():
+                get_user_model().objects.create(
+                    **user_data_serializer.data
+                )
+            else:
+                return Response(user_data_serializer.errors)
+            return Response("Sucessfully Created User")
+        else:
+            return Response(serializer.errors)

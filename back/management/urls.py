@@ -7,8 +7,8 @@ if settings.BUILD_TYPE in ['development', 'staging']:
 VERSION = 1
 
 urlpatterns = [
-    path(f"api/v{VERSION}/user_data/", api.user_app_data),
-    path(f"api/v{VERSION}/register/", api.register),
+    path(f"api/v{VERSION}/user_data/", api.user_app_data.as_view()),
+    path(f"api/v{VERSION}/register/", api.register.as_view()),
     path(f"app/", views.example_frontend),
     *([
         path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
