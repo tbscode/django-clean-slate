@@ -96,6 +96,11 @@ if BUILD_TYPE in ['staging', 'development']:
         'SWAGGER_UI_DIST': 'SIDECAR',
         'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
         'REDOC_DIST': 'SIDECAR',
+        "SWAGGER_UI_SETTINGS": {
+            "deepLinking": True,
+            "persistAuthorization": True,
+            "displayOperationId": True,
+        },
     }
 
 """
