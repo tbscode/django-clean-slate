@@ -7,3 +7,4 @@ uvicorn[standard]
 drf-spectacular[sidecar] # TODO: maybe this should only be used for api building
 whitenoise # Serving static files in development
 django-webpack-loader # Load the static file bundles
+django-cors-headers
