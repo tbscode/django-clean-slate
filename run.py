@@ -267,8 +267,9 @@ def deploy_staging(args):
     if not 'HEROKU_REGISTRY_URL' in heroku_env:  # The registry url can componly be infered from the app name
         heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
     # Build the frontends
-    build_front(args)  # TODO: invoke a little more safely
+    build_front(args)
     # Collect the statics ( also contains the files for open api specifications )
+    build(args)  # Required build of the 'dev' image
     extract_static(args)
     # Build Dockerfile.stage
     _build_file_tag(c.file_staging[1], c.staging_tag)
