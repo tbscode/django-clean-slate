@@ -39,10 +39,6 @@ For production I recommend a pooled postgressql database, a redis memory store (
 
 This repo offers a **staging** deployment! For staging we can easily use [`white-noise`](http://whitenoise.evans.io/en/stable/) to serve static files, a simple in-container redis instance and a simple in-container sqllite database. This can be auto deployed on a free-tier Heroku instance - or similar - using the `Dockerfile.stage` in combination with a github [workflow](https://github.com/tbscode/django-clean-slate/actions/workflows/stage.yaml).
 
-This even offers the flexibility of seperate staging for seperate developers simply by opening mulitple Heroku accounts.
-
-> If you wan't to use this 'clean-slate' for a hoppy project a free ( or hobby ) tier Heroku instance might be completely sufficient
-
 ## Documentation
 
 Are automaticly generated using `sphinx` and published to [`gh-pages`](https://tbscode.github.io/django-clean-slate).
