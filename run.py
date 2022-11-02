@@ -117,6 +117,16 @@ def _is_dev(a):
     return "dev" in a.btype
 
 
+@register_action(name="list_running", alias=["ps"])
+def _list_running_instances(args):
+    all_running = []
+    for tag in [c.ptag, c.dtag, c.front_tag, c.staging_tag]:
+        ps = _running_instances(tag)
+        all_running += ps if isinstance(ps, list) else [ps]
+    print(all_running)
+    return all_running
+
+
 def _running_instances(tag=TAG):
     """ Get a list of running instance for docker 'tag' """
     _cmd = ["docker", "ps", "--format",
@@ -140,17 +150,24 @@ def _docker_images(repo=TAG, tag=None):
     return _filtered_images
 
 
+@register_action(alias=["fg"])
+def attach(args):
+    """ Attach to running container instances """
+    ps = _list_running_instances(args)
+    assert len(ps) == 1, "where to attach? please specify -i " + \
+        "\"{'ID':'...'}\""
+    subprocess.run(["docker", "container", "attach", ps[0]["ID"]
+                   if len(ps) == 1 else eval(args.input)["ID"]])
+
+
 @register_action(cont=True, alias=["k"])
 def kill(args, front=True, back=True):
     """ Kills all the running container instances (back & front)"""
-    ps = [*(_running_instances() if back else []),
-          *(_running_instances(tag=FRONT_TAG) if front else [])]
-    _cmd = ["docker", "kill"]
-    for p in ps:
-        _c = _cmd + [p["ID"]]
-        print(' '.join(_c))
-        subprocess.run(_c)
-    # TODO: make use of the _kill_tag function below
+    for tag in [c.front_tag if front else None,
+                c.dtag if back else None,
+                c.ptag if not _is_dev(args) else None]:
+        if tag:
+            _kill_tag(tag)
 
 
 def _kill_tag(tag):
