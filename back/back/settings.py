@@ -17,6 +17,7 @@ management: for user management and general api usage
 
 INSTALLED_APPS = [
     'management',
+    'corsheaders',
     'rest_framework',
     *([  # API docs not required in deployment
         'drf_spectacular',  # for api shema generation
@@ -34,6 +35,8 @@ print(f'Installed apps:\n' + '\n- '.join(INSTALLED_APPS))
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     *([  # Whitenoise to server static only needed in staging or development
         'whitenoise.middleware.WhiteNoiseMiddleware',
     ] if BUILD_TYPE in ['staging', 'development'] else []),
@@ -46,6 +49,17 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'back.urls'
+
+CORS_ALLOWED_ORIGINS = []
+if BUILD_TYPE == 'staging':
+    CORS_ALLOWED_ORIGINS = [
+        'https://django-clean-slate-staging.herokuapp.com',  # For staging heroku page
+    ]
+
+if BUILD_TYPE == 'staging':
+    CSRF_TRUSTED_ORIGINS = [
+        'https://django-clean-slate-staging.herokuapp.com',  # For staging heroku page
+    ]
 
 TEMPLATES = [
     {
@@ -114,7 +128,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-} if DEBUG else {
+} if BUILD_TYPE in ['staging', 'development'] else {
     # TODO: production DB setup
 }
 
