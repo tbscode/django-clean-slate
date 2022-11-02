@@ -168,26 +168,21 @@ def _run_in_running(dev, commands, backend=True, capture_out=False, work_dir=Non
     Per default this looks for a backend container.
     It will look for a frontend container with backend=False
     """
-    ps = [x for x in _running_instances() if (
-        "dev" if dev else "prod") in x["Image"]] if backend else _running_instances(tag=FRONT_TAG)
-    assert len(ps) > 0, "no running instances found"
-    _cmd = ["docker", "exec",
-            *(["-w", work_dir] if work_dir else []), "-it", ps[0]["ID"], *commands]
-    if not capture_out:
-        subprocess.run(" ".join(_cmd), shell=True)
-    else:
-        return str(subprocess.run(_cmd, **subprocess_capture_out).stdout)
+    return _run_in_running_tag(
+        commands=commands,
+        tag=(c.dtag if dev else c.ptag) if backend else FRONT_TAG,
+        capture_out=capture_out,
+        work_dir=work_dir)
 
 
-# TODO this should be merged with the above method
-def _run_in_running_tag(commands, tag, capture_out=False, work_dir=None):
+def _run_in_running_tag(commands, tag, capture_out=False, work_dir=None, extra_docker_cmd=[]):
     """
     Runns command in a running container, with a specific tag
     """
     ps = _running_instances(tag)
     assert len(ps) > 0, "no running instances found"
     _cmd = ["docker", "exec",
-            *(["-w", work_dir] if work_dir else []), "-it", ps[0]["ID"], *commands]
+            *(["-w", work_dir] if work_dir else []), *extra_docker_cmd, "-it", ps[0]["ID"], *commands]
     if not capture_out:
         subprocess.run(" ".join(_cmd), shell=True)
     else:
@@ -239,23 +234,59 @@ def _build_file_tag(file, tag):
     subprocess.run(_cmd)
 
 
+@register_action(alias=["set_root_pw"])
+def _set_root_pw(args):
+    """ Can be used to create the default root user in development """
+    _make_root_user(**{
+        "password": "password",
+        "username": "username",
+        "email": "username@mail.com",
+        "tag": c.dtag
+    })
+
+
+def _make_root_user(password, username, email, tag=c.dtag):
+    _run_in_running_tag(tag=tag, commands=[
+                        "python3", "manage.py", "createsuperuser", "--no-input",
+                        "--username", username,
+                        "--email", email,
+                        ], extra_docker_cmd=["-e", f"DJANGO_SUPERUSER_PASSWORD={password}"])
+
+
 @register_action(alias=["stage"])
 def deploy_staging(args):
     """
     Build and push the dockerfile for the staging server
     This acction requires some config params passed via -i
     e.g.: -i "{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}"
+    optional 'ROOT_USER_PASSWORD' if passed will create a root user
+    optional 'ROOT_USER_EMAIL', 'ROOT_USER_USERNAME'
     """
     assert args.input, " '-i' required, e.g.: \"{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}\""
     heroku_env = eval(args.input)
     if not 'HEROKU_REGISTRY_URL' in heroku_env:  # The registry url can componly be infered from the app name
         heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
-    # Build Dockerfile.stage
-    _build_file_tag(c.file_staging[1], c.staging_tag)
     # Build the frontends
     build_front(args)  # TODO: invoke a little more safely
     # Collect the statics ( also contains the files for open api specifications )
     extract_static(args)
+    # Build Dockerfile.stage
+    _build_file_tag(c.file_staging[1], c.staging_tag)
+    if 'ROOT_USER_PASSWORD' in heroku_env:
+        print("Got 'ROOT_USER_PASSWORD' adding root user ...")
+        # Ok in that case we create a base root user
+        # The default staging deployment doesn't use *any* root user
+        # This would only be needed if backend administration should be debugged in staging
+        _run_tag_env(c.staging_tag, env=c.stage_env, background=True)
+        assert 'ROOT_USER_USERNAME' in heroku_env
+        _make_root_user(**{
+            "email": heroku_env.get(
+                "ROOT_USER_EMAIL", heroku_env['ROOT_USER_USERNAME'] + "@mail.com"),
+            "username": heroku_env['ROOT_USER_USERNAME'],
+            "password": heroku_env['ROOT_USER_PASSWORD'],
+            "tag": c.staging_tag
+        })
+
     # We need to check if heroku config vars need updating
     env_statge = _env_as_dict(c.stage_env)
     for k in env_statge:
@@ -429,7 +460,9 @@ def _run(dev=True, background=False):
 def manage_command(args):
     """ runns a manage.py command inside the container """
     assert args.cmd, "command list required '-c' ..."
-    _run_in_running(_is_dev(args), ["python3", "manage.py", *args.cmd])
+    _cmd = args.cmd[1:-1].split(" ") if len(
+        args.cmd) == 1 and args.cmd[0].startswith("'") else args.cmd
+    _run_in_running(_is_dev(args), ["python3", "manage.py", *_cmd])
 
 
 @register_action(name="build_docs", alias=["docs"])

@@ -23,5 +23,5 @@ jobs:
           heroku_email: '${{secrets.HEROKU_EMAIL}}'
           justlogin: true
       - run: heroku auth:whoami
-      - run: ./run.py stage -i "{'HEROKU_APP_NAME':'${{secrets.HEROKU_APP_NAME}}'}"
+      - run: ./run.py stage -i "{'HEROKU_APP_NAME':'${{secrets.HEROKU_APP_NAME}}','ROOT_USER_PASSWORD':'${{secrets.STAGING_ROOT_USER_PASSWORD}}','ROOT_USER_USERNAME':'${{secrets.STAGING_ROOT_USER_USERNAME}}'}"
         shell: 'script -q -e -c "bash {0}"'
