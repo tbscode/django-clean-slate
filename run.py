@@ -41,7 +41,7 @@ class c:
 
     # For making the spinix docs
     vmount_spinix = ["-v", f"{os.getcwd()}/_docs:/docs",
-                     "-v", f"{os.getcwd()}/back:/docs/backend"]
+                     "-v", f"{os.getcwd()}/back:/docs_source/backend"]
     file_spinix = ["-f", "Dockerfile.docs"]
     tag_spinix = "docs.spinix"
 
@@ -278,11 +278,17 @@ def deploy_staging(args):
     e.g.: -i "{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}"
     optional 'ROOT_USER_PASSWORD' if passed will create a root user
     optional 'ROOT_USER_EMAIL', 'ROOT_USER_USERNAME'
+    optional 'DOCS', default: False
     """
     assert args.input, " '-i' required, e.g.: \"{'HEROKU_REGISTRY_URL':'...','HEROKU_APP_NAME':'...'}\""
     heroku_env = eval(args.input)
     if not 'HEROKU_REGISTRY_URL' in heroku_env:  # The registry url can componly be infered from the app name
         heroku_env['HEROKU_REGISTRY_URL'] = f"registry.heroku.com/{heroku_env['HEROKU_APP_NAME']}/web"
+    if 'DOCS' in heroku_env and heroku_env['DOCS'].lower() in ('true', '1', 't'):
+        # Also build the documentation and move it to /static
+        build_docs(args)
+        # Copy the build files to
+        shutil.copytree("./docs", "./back/static/docs")
     # Build the frontends
     build_front(args)
     # Collect the statics ( also contains the files for open api specifications )
@@ -497,10 +503,10 @@ def build_docs(args):
     print(" ".join(_cmd))
     subprocess.run(_cmd)
     _run_in_running_tag(["make", "html"], tag=c.tag_spinix, work_dir="/docs")
-    # _run_in_running_tag(["sh"], tag=c.tag_spinix)
-    _kill_tag(c.tag_spinix)
+    #_run_in_running_tag(["sh"], tag=c.tag_spinix)
     # copy the output files
     shutil.copytree("./_docs/build/html", "./docs")
+    _kill_tag(c.tag_spinix)
 
 
 @register_action(name="help", alias=["h", "?"])
