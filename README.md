@@ -46,6 +46,8 @@ Docs can be generated localy using `./run.py docs` or automaticly using a github
 
 e.g.: see full documentation of [`./run.py`](https://tbscode.github.io/django-clean-slate/apidoc/extra_mods.run.html#module-extra_mods.run).
 
+Alternatively docs can also be served from the saging server e.g.: [`/static/docs/`](https://django-clean-slate-staging.herokuapp.com/static/docs/)
+
 ### API documentation
 
 Using [`drf-spectacular`](https://github.com/tfranzel/drf-spectacular) to generate open api schemas from DRF.
